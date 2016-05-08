@@ -1,8 +1,10 @@
 all: clean compile
 compileRunLength: compileMyIoBitStream
 	g++ -g -c -I./MyIOBitStream/include/ -I./RunLength/include/ -o ./bin/runLength.o ./RunLength/src/runLength.cpp
+compileHuffman: compileMyIoBitStream
+	g++ -g -c -I./MyIOBitStream/include/ -o ./bin/HuffmanCoding.o ./HuffmanCoding/src/huffman.cpp
 compile: compileEncode compileDecode 
-compileEncode:	compileRunLength
+compileEncode:	compileRunLength compileHuffman
 	g++ -g -I./RunLength/include/ -o ./bin/encode ./src/encode.cpp ./bin/runLength.o
 compileDecode:	compileRunLength
 	g++ -g -I./RunLength/include/ -o ./bin/decode ./src/decode.cpp ./bin/runLength.o
