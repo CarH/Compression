@@ -8,6 +8,7 @@ MyIOBitStream::MyIOBitStream(){
 	this->charBuff=(char)0;
 	this->wasStreamDeclaredInternally=true;
 	this->stream = new stringstream();
+	(*(this->stream))>>noskipws;
 }
 
 MyIOBitStream::MyIOBitStream(iostream &s){
@@ -17,6 +18,7 @@ MyIOBitStream::MyIOBitStream(iostream &s){
 	this->charBuff=(char)0;
 	this->stream = &s;
 	this->wasStreamDeclaredInternally=false;
+	(*(this->stream))>>noskipws;
 }
 MyIOBitStream::~MyIOBitStream(){
 	if(this->wasStreamDeclaredInternally){
@@ -27,7 +29,9 @@ bool MyIOBitStream::appendBit(bool b){
 	(this->bitCounterWrite)++;
 	this->charBuff=this->charBuff<<1;
 	this->charBuff = this->charBuff | b; //adiciona bit no final
+	// cout<<"BOOL ADDING: "<<(int)b<<endl;
 	if(this->bitCounterWrite==8){ //se completou um byte
+		// cout<<"\t\tCHAR COPLETED"<<endl;
 		this->bitCounterWrite=0;
 		(*(this->stream))<<this->charBuff;
 		this->charBuff=(char)0;
@@ -93,18 +97,21 @@ string MyIOBitStream::getString(){
 	stringstream strStream;
 	char auxChar;
 	(*(this->stream))>>auxChar;
+	// int debugCounter=0;
 	while(!(*(this->stream)).eof()) {
 		strStream<<auxChar;
-		(*(this->stream))>>charBuff;
+		// debugCounter++;
+		(*(this->stream))>>auxChar;
 	}
+	// cout<<"DEBUG COUNTER GET STRING: "<<debugCounter<<endl;
 	if(this->bitCounterWrite >0){
 		int shiftsNeeded = 8-this->bitCounterWrite;
 		this->charBuff = (this->charBuff) <<shiftsNeeded;
 		strStream<<(this->charBuff);
 		this->bitCounterWrite=0;
 		this->charBuff = (char)0;
-		this->stream->clear();
 	}
+	this->stream->clear();
 	// cout<<strStream.str()<<endl;
 	return strStream.str();
 
