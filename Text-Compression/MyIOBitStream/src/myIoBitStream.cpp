@@ -103,6 +103,7 @@ string MyIOBitStream::getString(){
 		strStream<<(this->charBuff);
 		this->bitCounterWrite=0;
 		this->charBuff = (char)0;
+		this->stream->clear();
 	}
 	// cout<<strStream.str()<<endl;
 	return strStream.str();
