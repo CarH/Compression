@@ -24,4 +24,4 @@
 			//foi projetado para ser chamado somente no final
 			std::string getString();
 	};
-#endif
+#endif 
