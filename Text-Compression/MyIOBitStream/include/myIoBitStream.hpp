@@ -23,5 +23,6 @@
 			//CUIDADO: o ponteiro de leitura da stream eh avancado ao chamar esse metodo
 			//foi projetado para ser chamado somente no final
 			std::string getString();
+			static void printBitString(std::string str);
 	};
 #endif 

@@ -83,7 +83,7 @@ char MyIOBitStream::getNextByte(){
 	char returnValue = (char)0;
 	for(int i=0;i<8;i++){
 		bitValues[i]=this->getNextBit();
-		cout<<(int)bitValues[i];
+		// cout<<(int)bitValues[i];
 		returnValue=returnValue<<1;
 		returnValue=returnValue | bitValues[i];
 	}
@@ -115,4 +115,15 @@ string MyIOBitStream::getString(){
 	// cout<<strStream.str()<<endl;
 	return strStream.str();
 
+}
+void MyIOBitStream::printBitString(string str) {
+	char aux;
+	char mask = 0x80;
+	for (int i = 0; i < str.length(); i++) {
+		aux = str[i];
+		for (int j = 0; j < 8; j++) {
+			cout << ((aux & mask) ? "1" : "0");
+			aux = aux << 1;
+		}
+	}
 }
