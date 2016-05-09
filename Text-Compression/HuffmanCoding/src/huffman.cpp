@@ -6,7 +6,7 @@
 #include <queue>
 #include <map>
 #include "myIoBitStream.hpp"
-#define SIZEBUFFER 16
+#define SIZEBUFFER 2048
 using namespace std;
 
 // Node structure of the Huffman's Tree
@@ -115,6 +115,19 @@ void createCodeTable(Node no, vector<char> mStack=vector<char>()) {
 	createCodeTable(n, mStack);
 }
 
+void printBitString(string str) {
+	char aux;
+	char mask = 0x80;
+	for (int i = 0; i < str.length(); i++) {
+		aux = str[i];
+		for (int j = 0; j < 8; j++) {
+			cout << ((aux & mask) ? "1" : "0");
+			aux = aux << 1;
+		}
+	}
+}
+
+
 void huffmanEncode(ifstream &inFile, string outFileName) {
 	char value;
 	int buffCnt;
@@ -140,6 +153,9 @@ void huffmanEncode(ifstream &inFile, string outFileName) {
 				}
 				buffCnt++;
 				if (buffCnt == SIZEBUFFER) {
+					string str1 = bitStream.getString();
+					printBitString(str1);
+					outFile << str1;
 					outFile << bitStream.getString();
 					buffCnt = 0;
 				}
@@ -147,7 +163,10 @@ void huffmanEncode(ifstream &inFile, string outFileName) {
 			cerr << "\n";
 		}
 		if (buffCnt > 0) {
-			outFile << bitStream.getString();
+			string str = bitStream.getString();
+			outFile << str;
+			printBitString(str);
+
 		}
 		outFile.close();
 	}
@@ -203,6 +222,7 @@ int main(int argc, char const *argv[]) {
 
 	inFileName  = argv[1];
 	outFileName = argv[2];
+
 
 	inFile.open(inFileName.c_str());
 	if (inFile.is_open()) {
