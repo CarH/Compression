@@ -2,6 +2,8 @@
 #include "myIoBitStream.hpp"
 #include <vector>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
 
 using namespace std;
 
@@ -16,19 +18,73 @@ void putBitsOfNumber(MyIOBitStream &stream,long long int value,long long int max
 		stream.appendBit(valueOfBits[i]);
 	}
 }
-
+long long int readSequenceLengthFromBitStream(MyIOBitStream &bitStream,long long int maxBits){
+	long long int result=0;
+	bool bitRead;
+	for(long long int i=0;i<maxBits;i++){
+		bitRead=bitStream.getNextBit();
+		if(bitStream.eof()){//deveria conter os bits necessarios... erro grave
+			cerr<<"\tERROR: Insufficient bits to read sequence length"<<endl;
+			exit(EXIT_FAILURE);
+		}
+		result<<=1;
+		result = result | bitRead;
+	}
+	return result;
+}
 string binToStrRunLength(iostream &inFile,long long int maxBits){
-	// MyIOBitStream bitStream(inFile);
+	MyIOBitStream bitStream(inFile);
 
-	// char previousChar;
-	// char currentChar;
-	// int counter=0;
-	// symbol=bitStream.getNextByte();
-	// while(!bitStream.eof()){
-	// 	if(){
+	char currentChar;
+	char previousChar;
+	char trash;
+	long long int sequenceLength;
+	bool isFileEmpty=true;
+	stringstream outResultStream;
+	int currentPos;
+	int counter=1;
+	bool wasLastOperationARunLength=false;
 
-	// 	}
-	// }
+	
+	// inFile>>std::noskipws;
+	previousChar=bitStream.getNextByte();
+	while(bitStream.getBitsReadCounter()==8){ // enquanto tiver bytes completos para ler
+		isFileEmpty=false;
+		currentChar=bitStream.getNextByte();
+		// cout<<" Current: "<<currentChar<<" previousChar: "<<previousChar<<endl;
+		if(bitStream.getBitsReadCounter()==8){//se leu char completo
+			outResultStream<<previousChar;
+			if(previousChar==currentChar){
+				counter++;
+			}else{
+				counter=1;
+			}
+			if(counter==3){
+				sequenceLength=readSequenceLengthFromBitStream(bitStream,maxBits);
+				// cout<<"\t Sequence Length: "<<sequenceLength<<endl;
+				// inFile>>trash; //le o espaco vazio
+				outResultStream<<currentChar;
+				
+				outResultStream<<sequenceLength<<" ";
+				
+				counter=1;
+				previousChar=bitStream.getNextByte();
+				wasLastOperationARunLength=true;
+			}else{
+				previousChar=currentChar;
+				wasLastOperationARunLength=false;
+			}
+		}
+		
+	}
+	if(!isFileEmpty
+		&& !wasLastOperationARunLength
+	){//se tiver um caracter so
+		outResultStream<<previousChar; 
+	}
+
+
+	return outResultStream.str();
 
 }
 
@@ -41,6 +97,7 @@ string strToBinRunLength(istream &inFile,long long int maxBits){
 	MyIOBitStream outResultStream;
 	int currentPos;
 	int counter=1;
+	bool wasLastOperationARunLength=false;
 
 	
 	inFile>>std::noskipws;
@@ -66,13 +123,17 @@ string strToBinRunLength(istream &inFile,long long int maxBits){
 				
 				counter=1;
 				inFile>>previousChar;
+				wasLastOperationARunLength=true;
 			}else{
+				wasLastOperationARunLength=false;
 				previousChar=currentChar;
 			}
 		}
 		
 	}
-	if(!isFileEmpty){//se tiver um caracter so
+	if(!isFileEmpty
+		&& !wasLastOperationARunLength
+	){//se tiver um caracter so
 		outResultStream.appendByte(previousChar); 
 	}
 
@@ -125,7 +186,7 @@ string encodeRunLength(istream &inFile,long long int *maxBits){
 	// currentPos = inFile.tellg();
 	// cout<<L"CurrentPos: "<<currentPos<<endl;
 	if(	!isFileEmpty //se arquivo nao vazio 
-		&& currentChar==nextCharToProcess
+		&& currentChar==nextCharToProcess //OBS: aparentemente, essa condicao sera sempre verdadeira
 		){
 		
 		for(long long int i=0;i<3 && i<sequenceLength;i++){
@@ -204,6 +265,7 @@ string decodeRunLength(istream &inFile){
 	stringstream outResultStream;
 	int currentPos;
 	int counter=1;
+	bool wasLastOperationARunLength=false;
 
 	
 	inFile>>std::noskipws;
@@ -229,13 +291,17 @@ string decodeRunLength(istream &inFile){
 				}
 				counter=1;
 				inFile>>previousChar;
+				wasLastOperationARunLength=true;
 			}else{
+				wasLastOperationARunLength=false;
 				previousChar=currentChar;
 			}
 		}
 		
 	}
-	if(!isFileEmpty){//se tiver um caracter so
+	if(!isFileEmpty
+		&& !wasLastOperationARunLength
+		){//se tiver um caracter so
 		outResultStream<<previousChar; 
 	}
 
