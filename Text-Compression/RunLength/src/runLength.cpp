@@ -1,64 +1,93 @@
 #include "runLength.hpp"
 #include "myIoBitStream.hpp"
+#include <vector>
+#include <cmath>
 
 using namespace std;
 
-string strToBinRunLength(istream &inFile,long long int maxBits){
-	// char currentChar;
-	// char previousChar;
-	// char trash;
-	// long long int sequenceLength;
-	// bool isFileEmpty=true;
-	// stringstream outResultStream;
-	// int currentPos;
-	// int counter=1;
-
-	
-	// inFile>>std::noskipws;
-	// inFile>>previousChar;
-	// while(!inFile.eof()){
-	// 	isFileEmpty=false;
-	// 	inFile>>currentChar;
-	// 	// cout<<" Current: "<<currentChar<<" previousChar: "<<previousChar<<endl;
-	// 	if(!inFile.eof()){
-	// 		outResultStream<<previousChar;
-	// 		if(previousChar==currentChar){
-	// 			counter++;
-	// 		}else{
-	// 			counter=1;
-	// 		}
-	// 		if(counter==3){
-	// 			inFile>>sequenceLength;
-	// 			// cout<<"\t Sequence Length: "<<sequenceLength<<endl;
-	// 			inFile>>trash; //le o espaco vazio
-	// 			outResultStream<<currentChar;
-	// 			for(long long int i=0;i<sequenceLength ;i++){
-	// 				outResultStream<<currentChar;
-	// 			}
-	// 			counter=1;
-	// 			inFile>>previousChar;
-	// 		}else{
-	// 			previousChar=currentChar;
-	// 		}
-	// 	}
-		
-	// }
-	// if(!isFileEmpty){//se tiver um caracter so
-	// 	outResultStream<<previousChar; 
-	// }
-
-
-	// return outResultStream.str();
+void putBitsOfNumber(MyIOBitStream &stream,long long int value,long long int maxBits){
+	vector<bool> valueOfBits(maxBits);
+	long long int mask = 1;//mascara para pegar o bit menos significativo
+	for(long long int i=0;i<maxBits;i++){
+		valueOfBits[i]=  value & mask;
+		value>>=1;
+	}
+	for(long long int i=maxBits-1;i>=0;i--){
+		stream.appendBit(valueOfBits[i]);
+	}
 }
 
-string encodeRunLength(istream &inFile){
+string binToStrRunLength(iostream &inFile,long long int maxBits){
+	// MyIOBitStream bitStream(inFile);
+
+	// char previousChar;
+	// char currentChar;
+	// int counter=0;
+	// symbol=bitStream.getNextByte();
+	// while(!bitStream.eof()){
+	// 	if(){
+
+	// 	}
+	// }
+
+}
+
+string strToBinRunLength(istream &inFile,long long int maxBits){
+	char currentChar;
+	char previousChar;
+	char trash;
+	long long int sequenceLength;
+	bool isFileEmpty=true;
+	MyIOBitStream outResultStream;
+	int currentPos;
+	int counter=1;
+
+	
+	inFile>>std::noskipws;
+	inFile>>previousChar;
+	while(!inFile.eof()){
+		isFileEmpty=false;
+		inFile>>currentChar;
+		// cout<<" Current: "<<currentChar<<" previousChar: "<<previousChar<<endl;
+		if(!inFile.eof()){
+			outResultStream.appendByte(previousChar);
+			if(previousChar==currentChar){
+				counter++;
+			}else{
+				counter=1;
+			}
+			if(counter==3){
+				inFile>>sequenceLength;
+				// cout<<"\t Sequence Length: "<<sequenceLength<<endl;
+				inFile>>trash; //le o espaco vazio
+				outResultStream.appendByte(currentChar);
+				
+				putBitsOfNumber(outResultStream, sequenceLength,maxBits);
+				
+				counter=1;
+				inFile>>previousChar;
+			}else{
+				previousChar=currentChar;
+			}
+		}
+		
+	}
+	if(!isFileEmpty){//se tiver um caracter so
+		outResultStream.appendByte(previousChar); 
+	}
+
+
+	return outResultStream.getString();
+}
+
+string encodeRunLength(istream &inFile,long long int *maxBits){
 	char nextCharToProcess;
 	char currentChar;
 	long long int sequenceLength;
 	bool isFileEmpty=true;
 	stringstream outResultStream;
 	int currentPos;
-
+	long long int maxSequenceLength=-1;
 
 	
 
@@ -86,6 +115,7 @@ string encodeRunLength(istream &inFile){
 			//seguido obrigatoriamente por um espaco
 			if(sequenceLength>=0){
 				outResultStream<<sequenceLength<<" ";
+				maxSequenceLength = max(maxSequenceLength,sequenceLength);
 			}
 			sequenceLength=1;
 		}
@@ -106,10 +136,16 @@ string encodeRunLength(istream &inFile){
 		//seguido obrigatoriamente por um espaco
 		if(sequenceLength>=0){
 			outResultStream<<sequenceLength<<" ";
+			maxSequenceLength = max(maxSequenceLength,sequenceLength);
 		}
 
 	}
-	
+	*maxBits=0;
+	while(maxSequenceLength!=0){
+		maxSequenceLength>>=1;
+		// cout<<"maxSequenceLength: "<<maxSequenceLength<<endl;
+		(*maxBits)++;
+	} 
 	return outResultStream.str();
 }
 
