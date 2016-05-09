@@ -3,22 +3,23 @@
 using namespace std;
 
 MyIOBitStream::MyIOBitStream(){
-	this->bitCounterWrite=0;
-	this->bitCounterRead=0;
-	this->charBuff=(char)0;
 	this->wasStreamDeclaredInternally=true;
 	this->stream = new stringstream();
-	(*(this->stream))>>noskipws;
+	this->init();
 }
 
 MyIOBitStream::MyIOBitStream(iostream &s){
-
+	this->stream = &s;
+	this->wasStreamDeclaredInternally=false;
+	this->init();
+}
+void MyIOBitStream::init(){
 	this->bitCounterWrite=0;
 	this->bitCounterRead=0;
 	this->charBuff=(char)0;
-	this->stream = &s;
-	this->wasStreamDeclaredInternally=false;
 	(*(this->stream))>>noskipws;
+	this->bitsRead=0;
+	this->internalEof=false;
 }
 MyIOBitStream::~MyIOBitStream(){
 	if(this->wasStreamDeclaredInternally){
@@ -63,6 +64,10 @@ bool MyIOBitStream::getNextBit(){
 	if(this->bitCounterRead==0){//se buffer vazio, entao le o proximo byte
 		
 		(*(this->stream))>>(this->charBuff);
+		if(this->stream->eof()){
+			this->internalEof = true;
+			return false;
+		}
 		// cout<<"Leu um char da stream: "<<this->charBuff<<endl;
 		this->bitCounterRead=8;
 	}
@@ -81,11 +86,16 @@ bool MyIOBitStream::getNextBit(){
 char MyIOBitStream::getNextByte(){
 	bool bitValues[8];
 	char returnValue = (char)0;
+	this->bitsRead=0;
 	for(int i=0;i<8;i++){
 		bitValues[i]=this->getNextBit();
-		// cout<<(int)bitValues[i];
 		returnValue=returnValue<<1;
-		returnValue=returnValue | bitValues[i];
+		if(!this->eof()){
+			(this->bitsRead)++;
+			// cout<<(int)bitValues[i];
+			
+			returnValue=returnValue | bitValues[i];
+		}
 	}
 	// for(int i=0;i<8;i++){
 		
@@ -126,4 +136,10 @@ void MyIOBitStream::printBitString(string str) {
 			aux = aux << 1;
 		}
 	}
+}
+int MyIOBitStream::getBitsReadCounter(){
+	return this->bitsRead;
+}
+bool MyIOBitStream::eof(){
+	return this->internalEof;
 }

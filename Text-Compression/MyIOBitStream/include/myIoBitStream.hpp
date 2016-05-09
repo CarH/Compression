@@ -11,6 +11,9 @@
 			short int bitCounterWrite;
 			std::iostream *stream;
 			bool wasStreamDeclaredInternally;
+			bool internalEof;
+			int bitsRead;
+			void init();
 
 		public:
 			MyIOBitStream(std::iostream &s);
@@ -20,6 +23,8 @@
 			bool appendByte(char byte);
 			bool getNextBit();
 			char getNextByte();
+			int getBitsReadCounter();
+			bool eof();
 			//CUIDADO: o ponteiro de leitura da stream eh avancado ao chamar esse metodo
 			//foi projetado para ser chamado somente no final
 			std::string getString();
