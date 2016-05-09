@@ -5,7 +5,8 @@
 #include <vector>
 #include <queue>
 #include <map>
-
+#include "myIoBitStream.hpp"
+#define SIZEBUFFER 16
 using namespace std;
 
 // Node structure of the Huffman's Tree
@@ -114,12 +115,41 @@ void createCodeTable(Node no, vector<char> mStack=vector<char>()) {
 	createCodeTable(n, mStack);
 }
 
-void huffmanEncode(Node &huffmanTreeRoot, string outFileName) {
+void huffmanEncode(ifstream &inFile, string outFileName) {
+	char value;
+	int buffCnt;
 	ofstream outFile;
-	outFile.open(outFileName.c_str(), ios_base::binary);
+	vector<char> codeVector;
+	MyIOBitStream bitStream;
 
+	inFile.clear(); inFile.seekg(0, inFile.beg);
+	outFile.open(outFileName.c_str(), ios::binary | ios::in | ios::trunc);
 	if (outFile.is_open()) {
-
+		buffCnt = 0;
+		while (inFile.get(value)) {
+			codeVector = char_codeVector[value];
+			cerr << " > Recording into output file [" << value <<"]: ";
+			for (int i = 0; i < codeVector.size(); i++) {
+				if (codeVector[i] & 1) {
+					bitStream.appendBit(true);
+					cerr << "1";
+				}
+				else {
+					bitStream.appendBit(false);
+					cerr << "0";
+				}
+				buffCnt++;
+				if (buffCnt == SIZEBUFFER) {
+					outFile << bitStream.getString();
+					buffCnt = 0;
+				}
+			}
+			cerr << "\n";
+		}
+		if (buffCnt > 0) {
+			outFile << bitStream.getString();
+		}
+		outFile.close();
 	}
 	else {
 		cerr << " ERROR: Could not open the file " << outFileName << "\n";
@@ -171,9 +201,9 @@ int main(int argc, char const *argv[]) {
 	char value;
 	map<char, long> char_freq;
 
-	inFileName = argv[1];
+	inFileName  = argv[1];
+	outFileName = argv[2];
 
-	cout << "trying to open " << inFileName << endl;
 	inFile.open(inFileName.c_str());
 	if (inFile.is_open()) {
 		while (inFile.get(value)) {
@@ -187,13 +217,16 @@ int main(int argc, char const *argv[]) {
 		}
 		cout << endl;
 		printMap(char_freq);
-		cout << "chamou buildHuffmanTree!\n"; cout.flush();
+		
 		buildHuffmanTree(char_freq);
 
 		printHuffmanTree(huffmanTreeRoot);
 		
 		createCodeTable(huffmanTreeRoot);
+		
 		printCodeTable();
+		
+		huffmanEncode(inFile, outFileName);
 
 		inFile.close();
 	}
