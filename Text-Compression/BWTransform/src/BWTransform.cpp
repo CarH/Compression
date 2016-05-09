@@ -22,7 +22,14 @@ bool BWTCompare::operator() (int i,int j){
 	for(int k=0;k<j;k++){
 		str2+=(this->str)[k];
 	}
-	return str1<str2;
+	for(int k=0;k<(this->str).size();k++){
+		if(str1[k]<str2[k]){
+			return true; 
+		}else if (str1[k]>str2[k]){
+			return false;
+		}
+	}
+	return true;
 }
 BWTCompare::BWTCompare(string str){
 	this->str = str;
@@ -66,22 +73,42 @@ string BWTransform::decodeBlock(string block,int a){
 	map<char,int> k;
 	vector<int> c;
 	map<char,int> m ;
-
+	// cout<<"DECODING BLOCK: "<<block<<endl;
 	stringstream resultStream;
 	vector<char> Q;
-
+	map<char,int> checkingSymbolQnt;
 	blockSize=block.size();
-	for(int i=0;i<maxNumberOfSymbols;i++){
-		k[(char)i]=0;
+
+	for(int i=0;i<blockSize;i++){
+		checkingSymbolQnt[block[i]]=0;
+	}
+
+	maxNumberOfSymbols=checkingSymbolQnt.size();
+	// for(int i=0;i<maxNumberOfSymbols;i++){
+	// 	k[i]=0;
+	// }
+	for(map<char,int>::iterator 
+			it= checkingSymbolQnt.begin()
+		;it!=checkingSymbolQnt.end()
+		;it++){
+		k[it->first]=0;
 	}
 	for(int i=0;i<blockSize;i++){
 		c.push_back(k[block[i]]);
 		k[block[i]]=k[block[i]]+1;
 	}
-	sum=1;
-	for(int i=0;i<maxNumberOfSymbols;i++){
-		m[i]=sum;
-		sum=sum+k[i];
+	sum=0;
+	// for(int i=0;i<maxNumberOfSymbols;i++){
+	// 	m[i]=sum;
+	// 	sum=sum+k[i];
+	// }
+	for(map<char,int>::iterator 
+			it= checkingSymbolQnt.begin()
+		;it!=checkingSymbolQnt.end()
+		;it++){
+
+		m[it->first]=sum;
+		sum=sum+k[it->first];
 	}
 	int y=a;
 	for(int j=blockSize-1;j>=0;j--){
@@ -101,6 +128,7 @@ string BWTransform::encodeBlock(string block,int *a){
 	for(int i=0;i<blockSize;i++){
 		orderedIndexes[i]=i;
 	}
+	cout<<"ENCODING BLOCK "<<block<<endl;
 	BWTCompare myComp = BWTCompare(block);
 	sort(orderedIndexes.begin(),orderedIndexes.end(),myComp);
 	int localA;
