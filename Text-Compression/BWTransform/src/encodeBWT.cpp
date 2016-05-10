@@ -8,6 +8,8 @@
 #include <locale>
 #include "BWTransform.hpp"
 
+#define BUFFER_SIZE 4096
+
 using namespace std;
 
 
@@ -33,6 +35,8 @@ void writeHeader(ostream &outFile,int blockSize,vector<int> &aVector){
 int main(int argc, char const *argv[])
 {
 	// cout<<"Oi"<<endl;
+	char bufferIn[BUFFER_SIZE];
+	char bufferOut[BUFFER_SIZE];
 	string filenameIn;
 	string filenameOut;
 	fstream inFile;
@@ -50,6 +54,10 @@ int main(int argc, char const *argv[])
 		cerr<<"usage: encode <file_name> <out_file> <block_size>"<<endl;
 		exit(EXIT_FAILURE);
 	}
+
+	// inFile.rdbuf()->pubsetbuf(bufferIn,BUFFER_SIZE);
+	// outFile.rdbuf()->pubsetbuf(bufferOut,BUFFER_SIZE);
+
 
 	filenameIn=argv[1]; 
 	filenameOut=argv[2]; 

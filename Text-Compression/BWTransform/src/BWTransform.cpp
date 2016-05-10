@@ -9,26 +9,47 @@ bool BWTCompare::operator() (int i,int j){
 	// return (i<j);
 	string str1;
 	string str2;
-	for(int k=i;k<(this->str).length();k++){
-		str1+=(this->str)[k];
-	}
-	for(int k=0;k<i;k++){
-		str1+=(this->str)[k];
-	}
-
-	for(int k=j;k<(this->str).length();k++){
-		str2+=(this->str)[k];
-	}
-	for(int k=0;k<j;k++){
-		str2+=(this->str)[k];
-	}
-	for(int k=0;k<(this->str).size();k++){
-		if(str1[k]<str2[k]){
+	int k=0;
+	//Testing the influence of compare complexity
+	// return i<j;
+	while(k<(this->str).size()){
+		if(j==(this->str).size()){
+			j=0;
+		}
+		if(i==(this->str).size()){
+			i=0;
+		}
+		
+		if((this->str)[i]<(this->str)[j]){
 			return true; 
-		}else if (str1[k]>str2[k]){
+		}else if ((this->str)[i]>(this->str)[j]){
 			return false;
 		}
+		k++;
+		j++;
+		i++;
 	}
+
+	// for(int k=i;k<(this->str).length();k++){
+	// 	str1+=(this->str)[k];
+	// }
+	// for(int k=0;k<i;k++){
+	// 	str1+=(this->str)[k];
+	// }
+
+	// for(int k=j;k<(this->str).length();k++){
+	// 	str2+=(this->str)[k];
+	// }
+	// for(int k=0;k<j;k++){
+	// 	str2+=(this->str)[k];
+	// }
+	// for(int k=0;k<(this->str).size();k++){
+	// 	if(str1[k]<str2[k]){
+	// 		return true; 
+	// 	}else if (str1[k]>str2[k]){
+	// 		return false;
+	// 	}
+	// }
 	return true;
 }
 BWTCompare::BWTCompare(string str){
@@ -128,7 +149,7 @@ string BWTransform::encodeBlock(string block,int *a){
 	for(int i=0;i<blockSize;i++){
 		orderedIndexes[i]=i;
 	}
-	cout<<"ENCODING BLOCK "<<block<<endl;
+	// cout<<"ENCODING BLOCK "<<block<<endl;
 	BWTCompare myComp = BWTCompare(block);
 	sort(orderedIndexes.begin(),orderedIndexes.end(),myComp);
 	int localA;
