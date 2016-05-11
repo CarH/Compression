@@ -6,11 +6,14 @@
 #include <queue>
 #include <map>
 #include "myIoBitStream.hpp"
-#define SIZEBUFFER 2048
+#define SIZEBUFFER 1024 // It must be M(8)
+#define LEFT_BIT 0
+#define RIGHT_BIT 1
 using namespace std;
 
 // Node structure of the Huffman's Tree
 class Node {
+ private:
 	long freq;
 	char symbol;
 	char code;
@@ -53,9 +56,17 @@ class Node {
 	Node getLeft() {
 		return *left;
 	}
-
+	
+	Node* leftPtr() {
+		return left;
+	}
+	
 	Node getRight() {
 		return *right;
+	}
+
+	Node* rightPtr() {
+		return right;
 	}
 
 	bool isLeaf() {
@@ -75,9 +86,8 @@ struct NodeComparison {
 };
 
 /**
- * buildHuffmanTree
- *  Build the Huffman's tree
- * @param char_freq a map whose key is a char and the value is the frequency that it occurs
+ * Build the Huffman's tree
+ * @param map<char, long>  char_freq
  */
 void buildHuffmanTree(map<char, long> &char_freq) {
 	// Stores the nodes. The top node has the smallest frequency value
@@ -99,20 +109,41 @@ void buildHuffmanTree(map<char, long> &char_freq) {
 	huffmanTreeRoot = pq.top(); pq.pop();
 }
 
-void createCodeTable(Node no, vector<char> mStack=vector<char>()) {
+/**
+ * Traverse the Huffman Tree and build Huffman Code Table from it
+ * @param Node 			no 			current node to process
+ * @param vector<char> 	codeVector	vector to store the 'bits' of the code
+ */
+void createCodeTable(Node no, vector<char> codeVector=vector<char>()) {
 	if (no.isLeaf()) {
-		char_codeVector[no.getChar()] = mStack;
+		char_codeVector[no.getChar()] = codeVector;
 		return;
 	}
 	// Go to the left
-	Node n = no.getLeft();
-	mStack.push_back(0);
-	createCodeTable(n, mStack);
+	codeVector.push_back(LEFT_BIT);
+	createCodeTable(no.getLeft(), codeVector);
 
 	// Go to the right
-	mStack.pop_back(); mStack.push_back(1);
-	n = no.getRight();
-	createCodeTable(n, mStack);
+	codeVector.pop_back(); codeVector.push_back(RIGHT_BIT);
+	createCodeTable(no.getRight(), codeVector);
+}
+
+/**
+ * Calculate the frequency that a character occurs in the file
+ * @param ifstream inFile input file
+ */
+map<char, long> calculateFrequency(ifstream &inFile) {
+	map<char, long> char_freq;
+	char value;
+	while (inFile.get(value)) {
+		if (char_freq.find(value) == char_freq.end()) {
+			char_freq[value] = 1;
+		}
+		else {
+			char_freq[value]++;
+		}
+	}
+	return char_freq;
 }
 
 void printBitString(string str) {
@@ -127,7 +158,6 @@ void printBitString(string str) {
 	}
 }
 
-
 void huffmanEncode(ifstream &inFile, string outFileName) {
 	char value;
 	int buffCnt;
@@ -141,32 +171,40 @@ void huffmanEncode(ifstream &inFile, string outFileName) {
 		buffCnt = 0;
 		while (inFile.get(value)) {
 			codeVector = char_codeVector[value];
-			cerr << " > Recording into output file [" << value <<"]: ";
+			// cerr << " > Recording into output file [" << value <<"]: ";
+			// for each bit of the code
 			for (int i = 0; i < codeVector.size(); i++) {
 				if (codeVector[i] & 1) {
 					bitStream.appendBit(true);
-					cerr << "1";
+					// cerr << "1";
 				}
 				else {
 					bitStream.appendBit(false);
-					cerr << "0";
+					// cerr << "0";
 				}
 				buffCnt++;
-				if (buffCnt == SIZEBUFFER) {
-					string str1 = bitStream.getString();
-					printBitString(str1);
-					outFile << str1;
+				if (buffCnt == SIZEBUFFER) { // Record the buffer into the output file
+					///////////////////////////////////////////////////
+					// Test
+					// cout << "Atingiu SIZEBUFFER!\n";
+					// string str1 = bitStream.getString();
+					// printBitString(str1);
+					// outFile << str1;
+					//////////////////////////////////////////
 					outFile << bitStream.getString();
 					buffCnt = 0;
 				}
 			}
-			cerr << "\n";
+			// cerr << "\n";
 		}
 		if (buffCnt > 0) {
-			string str = bitStream.getString();
-			outFile << str;
-			printBitString(str);
-
+			///////////////////////////////////////////////////
+			// Test
+			// string str = bitStream.getString();
+			// outFile << str;
+			// printBitString(str);
+			///////////////////////////////////////////////////
+			outFile << bitStream.getString();
 		}
 		outFile.close();
 	}
@@ -174,6 +212,48 @@ void huffmanEncode(ifstream &inFile, string outFileName) {
 		cerr << " ERROR: Could not open the file " << outFileName << "\n";
 	}
 }
+
+void huffmanDecode(ifstream &inFile, string outFileName) {
+	/**
+		TODO:
+		- get the number of valid bits on the last byte and use it to check
+	 */
+	char byte;
+	char bit;
+	char mask = 0x80;
+	ofstream outFile;
+	string buffer;
+
+	Node *currNode = &huffmanTreeRoot;
+	outFile.open(outFileName.c_str(), ios::out | ios::trunc);
+	while (!inFile.eof()) {
+		inFile.get(byte);
+		for (int i = 0; i < 8; i++) {
+			bit = (byte & mask);
+			byte <<= 1;
+			if (bit == LEFT_BIT) {
+				currNode = currNode->leftPtr();
+			}
+			else {
+				currNode = currNode->rightPtr();
+			}
+			if (currNode->isLeaf()) {
+				// cout << currNode->getChar();
+				buffer += currNode->getChar();
+				if (buffer.length() == SIZEBUFFER) {
+					outFile << buffer;
+					buffer.clear();
+				}
+				currNode = &huffmanTreeRoot;
+			}
+		}
+	}
+	if (buffer.length() > 0)
+		outFile << buffer;
+	outFile.close();
+}
+
+
 
 void printCodeTable() {
 	cout << "--------------------------\n + Code Table:\n";
@@ -187,7 +267,6 @@ void printCodeTable() {
 }
 
 void printHuffmanTree(Node &no) {
-
 	if (no.isLeaf()) {
 		cout << "\t- (LEAF) char: " << no.getChar() << ", frequency: " << no.getFrequency()  << ", code: ";
 		if (no.getCode() & 1) {
@@ -216,31 +295,33 @@ int main(int argc, char const *argv[]) {
 	/* Input  Parameters*/
 	ifstream inFile;
 	ofstream outFile;
+	map<char, long> char_freq;
 	string inFileName, outFileName;
 	char value;
-	map<char, long> char_freq;
 
 	inFileName  = argv[1];
 	outFileName = argv[2];
 
 
+	// MyIOBitStream bitStream;
+	// bitStream.appendBit(false);
+	// bitStream.appendBit(true);
+	// bitStream.appendBit(false);
+	// bitStream.appendBit(false);
+	// bitStream.appendBit(false);
+	// bitStream.appendBit(false);
+	// bitStream.appendBit(false);
+	// bitStream.appendBit(false);
+
 	inFile.open(inFileName.c_str());
 	if (inFile.is_open()) {
-		while (inFile.get(value)) {
-			cout << value;
-			if (char_freq.find(value) == char_freq.end()) {
-				char_freq[value] = 1;
-			}
-			else {
-				char_freq[value]++;
-			}
-		}
-		cout << endl;
+		char_freq = calculateFrequency(inFile);
+
 		printMap(char_freq);
 		
 		buildHuffmanTree(char_freq);
 
-		printHuffmanTree(huffmanTreeRoot);
+		// printHuffmanTree(huffmanTreeRoot);
 		
 		createCodeTable(huffmanTreeRoot);
 		
@@ -248,6 +329,11 @@ int main(int argc, char const *argv[]) {
 		
 		huffmanEncode(inFile, outFileName);
 
+		inFile.close();
+		inFile.clear(); inFile.open(outFileName.c_str(), ios::in | ios::binary);
+		
+		outFileName = "text50huffmanDecode.txt";
+		huffmanDecode(inFile, outFileName);
 		inFile.close();
 	}
 
