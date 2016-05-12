@@ -18,6 +18,12 @@
 			RunLengthConfig();
 			~RunLengthConfig();
 	};
+	class HuffmanConfig{
+		public:	
+			bool isValid;
+			HuffmanConfig();
+			~HuffmanConfig();
+	};
 	class CompressionConfig{
 		private:
 			void parseHeaderBWT(std::istream &inFile,int *blockSize,std::vector<int> &aVector);
@@ -25,9 +31,13 @@
 
 			void parseHeaderRunLength(std::istream &inFile,long long int *maxBits);
 			void writeHeaderRunLength(std::ostream &outFile,long long int maxBits);
+
+			void parseHeaderHuffman(std::istream &inFile);
+			void writeHeaderHuffman(std::ostream &outFile);
 		public:
 			BWTConfig bwtConfig;
 			RunLengthConfig rlConfig;
+			HuffmanConfig huffConfig;
 			void parseHeader(std::istream &headerFile);
 			void writeHeader(std::ostream &outFile);
 			

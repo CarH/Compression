@@ -16,6 +16,7 @@ using namespace std;
 
 void mainDecodeBWT(istream &inFile,ostream &outFile,BWTConfig &config);
 void mainDecodeRunLength(iostream &inFile,ostream &outFile,RunLengthConfig &config,bool binary);
+void mainDecodeHuffman(iostream &inFile,ostream &outFile,HuffmanConfig &config);
 bool parseArgs(int argc,const char *argv[],string &inFileName,string &outFileName);
 
 int main(int argc, char const *argv[])
@@ -55,7 +56,39 @@ int main(int argc, char const *argv[])
 	}
 	cout<<"Decoding"<<endl;
 	compConfig.parseHeader(inFile);
-	if(compConfig.bwtConfig.blockSize>0 && compConfig.rlConfig.maxBits>=0){
+	if(compConfig.bwtConfig.blockSize>0 
+		&& compConfig.rlConfig.maxBits>=0
+		&& compConfig.huffConfig.isValid
+		){
+		cout<<"\tEncoding type detected: BWT => Run Length => Huffman"<<endl;
+		stringstream intermediteStringStream;
+		stringstream intermediteStringStream2;
+		cout<<"\tDecoding Huffman"<<endl;
+		mainDecodeHuffman(inFile,intermediteStringStream,compConfig.huffConfig);
+		cout<<"\tDecoding Run Length"<<endl;
+		mainDecodeRunLength(intermediteStringStream,intermediteStringStream2,compConfig.rlConfig,false);
+		intermediteStringStream.str("");//forcing freeing of data (or trying to)
+		cout<<"\tDecoding BWT"<<endl;
+		mainDecodeBWT(intermediteStringStream2,outStrStream,compConfig.bwtConfig);
+	}else if(compConfig.huffConfig.isValid 
+		&& compConfig.rlConfig.maxBits>=0
+		){
+		stringstream intermediteStringStream;
+		cout<<"\tEncoding type detected: Run Length => Huffman"<<endl;
+		cout<<"\tDecoding Huffman"<<endl;
+		mainDecodeHuffman(inFile,intermediteStringStream,compConfig.huffConfig);
+		cout<<"\tDecoding Run Length"<<endl;
+		mainDecodeRunLength(intermediteStringStream,outStrStream,compConfig.rlConfig,false);
+	}else if(compConfig.huffConfig.isValid 
+		&& compConfig.bwtConfig.blockSize>0 
+		){
+		stringstream intermediteStringStream;
+		cout<<"\tEncoding type detected: BWT => Huffman"<<endl;
+		cout<<"\tDecoding Huffman"<<endl;
+		mainDecodeHuffman(inFile,intermediteStringStream,compConfig.huffConfig);
+		cout<<"\tDecoding BWT"<<endl;
+		mainDecodeBWT(intermediteStringStream,outStrStream,compConfig.bwtConfig);
+	}else if(compConfig.bwtConfig.blockSize>0 && compConfig.rlConfig.maxBits>=0){
 		//It has been encoded aplying first BWT and then RunLength
 		cout<<"\tEncoding type detected: BWT => Run Length"<<endl;
 		stringstream intermediteStringStream;
@@ -73,6 +106,17 @@ int main(int argc, char const *argv[])
 		cout<<"\tEncoding type detected: Run Length"<<endl;
 		cout<<"\tDecoding Run Length"<<endl;
 		mainDecodeRunLength(inFile,outStrStream,compConfig.rlConfig,true);
+	}else if(compConfig.huffConfig.isValid){
+		stringstream intermediteStringStream;
+		cout<<"\tEncoding type detected: Huffman"<<endl;
+		cout<<"\tDecoding Huffman"<<endl;
+		mainDecodeHuffman(inFile,intermediteStringStream,compConfig.huffConfig);
+
+	}else{
+		cout<<"No algorithms detected. Exiting"<<endl;
+		inFile.close();
+		outFile.close();
+		exit(EXIT_FAILURE);
 	}
 	inFile.close();
 	cout<<"Wiritng to File"<<endl;
@@ -113,6 +157,12 @@ void mainDecodeRunLength(iostream &inFile,ostream &outFile,RunLengthConfig &conf
 
 		outFile<<decodedString;
 	}
+}
+
+void mainDecodeHuffman(iostream &inFile,ostream &outFile,HuffmanConfig &config){
+	cerr<<"DEBUG: mainDecodeHuffman To Be Implemented"<<endl;
+
+	outFile<<inFile.rdbuf();
 }
 
 

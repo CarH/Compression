@@ -17,6 +17,14 @@ RunLengthConfig::~RunLengthConfig(){
 
 }
 
+HuffmanConfig::HuffmanConfig(){
+	this->isValid=false;
+	cerr<<"DEBUG: HuffManConfig To Be Implemented"<<endl;
+}
+HuffmanConfig::~HuffmanConfig(){
+
+}
+
 //==============CompressionConfig
 
 	//======Main
@@ -33,6 +41,10 @@ void CompressionConfig::parseHeader(istream &inFile){
 			}
 			case 'R':{
 				this->parseHeaderRunLength(inFile,&((this->rlConfig).maxBits));
+				break;
+			}
+			case 'H':{
+				this->parseHeaderHuffman(inFile);
 				break;
 			}
 			default:{
@@ -53,6 +65,9 @@ void CompressionConfig::writeHeader(ostream &outFile){
 	}
 	if(this->rlConfig.maxBits>=0){
 		this->writeHeaderRunLength(outFile,this->rlConfig.maxBits);
+	}
+	if(this->huffConfig.isValid){
+		this->writeHeaderHuffman(outFile);
 	}
 	outFile.write(&nullChar,sizeof(char));
 }
@@ -110,4 +125,14 @@ void CompressionConfig::parseHeaderRunLength(istream &inFile,long long int *maxB
 void CompressionConfig::writeHeaderRunLength(ostream &outFile,long long int maxBits){
 	outFile<<'R';
 	outFile.write((char*)&maxBits,sizeof(long long int));
+}
+
+
+//================= HUFFMAN
+void CompressionConfig::parseHeaderHuffman(istream &inFile){
+	cerr<<"DEBUG: CompressionConfig::parseHeaderHuffman To be Implemented"<<endl;
+
+}
+void CompressionConfig::writeHeaderHuffman(ostream &outFile){
+	cerr<<"DEBUG: CompressionConfig::writeHEaderHuffman To be Implemented"<<endl;
 }

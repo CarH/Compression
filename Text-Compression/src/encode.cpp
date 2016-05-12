@@ -19,6 +19,7 @@ using namespace std;
 
 void mainEncodeBWT(istream &inFile,ostream &outFile,BWTConfig &config);
 void mainEncodeRunLength(istream &inFile,ostream &outFile,RunLengthConfig &config,bool binary);
+void mainEncodeHuffman(istream &inFile,ostream &outFile,HuffmanConfig &config);
 bool parseArgs(int argc,const char *argv[],bool *huffman,bool *bwt,bool *rl,int *blockSize,string &inFileName,string &outFileName);
 
 int main(int argc, char const *argv[])
@@ -44,7 +45,7 @@ int main(int argc, char const *argv[])
 
 
 	if(!parseArgs(argc,argv,&huffman,&bwt,&runl,&blockSize,filenameIn,filenameOut)){
-		cerr<<"usage: encode -i <input_file_name> -o <output_file_name> --btw=[true|false] --txtblock=[true|false] --huffman=[true|false] --runl=[true|false]"<<endl;
+		cerr<<"usage: encode -i <input_file_name> -o <output_file_name> --btw=[true|false] --txtblck=[true|false] --huffman=[true|false] --runl=[true|false]"<<endl;
 		exit(EXIT_FAILURE);
 	}
 	// filenameIn=inFileNameChar; 
@@ -66,13 +67,46 @@ int main(int argc, char const *argv[])
 	}
 
 	cout<<"Encoding"<<endl;
-	if(bwt && runl){
+	if(huffman && bwt && runl){
+		cout<<"\tEncoding type detected: BWT => Run Length => Huffman"<<endl;
+		stringstream intermediateStringStream;
+		stringstream intermediateStringStream2;
+		compConfig.bwtConfig.blockSize=blockSize;
+		// cout<<"Block Size: "<<compConfig.bwtConfig.blockSize<<endl;
+		cout<<"\tEncoding BWT"<<endl;
+		mainEncodeBWT(inFile,intermediateStringStream,compConfig.bwtConfig);
+		inFile.close();
+		cout<<"\tEncoding Run Length"<<endl;
+		mainEncodeRunLength(intermediateStringStream,intermediateStringStream2,compConfig.rlConfig,false);
+		intermediateStringStream.str("");//forcing freeing of data (or trying to)
+		cout<<"\tEncoding Huffman"<<endl;
+		mainEncodeHuffman(intermediateStringStream2,outStrStream,compConfig.huffConfig);
+	}else if(huffman && runl){
+		stringstream intermediateStringStream;
+		cout<<"\tEncoding type detected: Run Length => Huffman"<<endl;
+		cout<<"\tEncoding Run Length"<<endl;
+		mainEncodeRunLength(inFile,intermediateStringStream,compConfig.rlConfig,false);
+		inFile.close();
+		cout<<"\tEncoding Huffman"<<endl;
+		mainEncodeHuffman(intermediateStringStream,outStrStream,compConfig.huffConfig);
+	}else if(huffman && bwt){
+		cout<<"\tEncoding type detected: BWT => Huffman"<<endl;
+		stringstream intermediateStringStream;
+		compConfig.bwtConfig.blockSize=blockSize;
+		// cout<<"Block Size: "<<compConfig.bwtConfig.blockSize<<endl;
+		cout<<"\tEncoding BWT"<<endl;
+		mainEncodeBWT(inFile,intermediateStringStream,compConfig.bwtConfig);
+		inFile.close();
+		cout<<"\tEncoding Huffman"<<endl;
+		mainEncodeHuffman(intermediateStringStream,outStrStream,compConfig.huffConfig);
+	}else if(bwt && runl){
 		cout<<"\tEncoding type detected: BWT => Run Length"<<endl;
 		stringstream intermediateStringStream;
 		compConfig.bwtConfig.blockSize=blockSize;
 		// cout<<"Block Size: "<<compConfig.bwtConfig.blockSize<<endl;
 		cout<<"\tEncoding BWT"<<endl;
 		mainEncodeBWT(inFile,intermediateStringStream,compConfig.bwtConfig);
+		inFile.close();
 		cout<<"\tEncoding Run Length"<<endl;
 		mainEncodeRunLength(intermediateStringStream,outStrStream,compConfig.rlConfig,true);
 	}else if(bwt){
@@ -80,12 +114,24 @@ int main(int argc, char const *argv[])
 		compConfig.bwtConfig.blockSize=blockSize;
 		cout<<"\tEncoding BWT"<<endl;
 		mainEncodeBWT(inFile,outStrStream,compConfig.bwtConfig);
+		inFile.close();
 	}else if(runl){
 		cout<<"\tEncoding type detected: Run Length"<<endl;
 		cout<<"\tEncoding Run Length"<<endl;
 		mainEncodeRunLength(inFile,outStrStream,compConfig.rlConfig,true);
+		inFile.close();
+	}else if(huffman){
+		cout<<"\tEncoding type detected: Huffman"<<endl;
+		cout<<"\tEncoding Huffman"<<endl;
+		mainEncodeHuffman(inFile,outStrStream,compConfig.huffConfig);
+		inFile.close();
+	}else{
+		cout<<"No algorithms detected. Exiting"<<endl;
+		inFile.close();
+		outFile.close();
+		exit(EXIT_FAILURE);
 	}
-	inFile.close();
+	
 	cout<<"Writing to File"<<endl;
 	compConfig.writeHeader(outFile);
 	outFile<<outStrStream.str();
@@ -120,6 +166,11 @@ void mainEncodeRunLength(istream &inFile,ostream &outFile,RunLengthConfig &confi
 		outFile<<encodedString;
 	}
 }
+void mainEncodeHuffman(istream &inFile,ostream &outFile,HuffmanConfig &config){
+	cerr<<"HuffMan Encoding To Be Implemented"<<endl;
+	outFile<<inFile.rdbuf();
+}
+
 
 bool parseArgs(int argc,const char *argv[],bool *huffman,bool *bwt,bool *rl,int *blockSize,string &inFileName,string &outFileName){
 	if(argc<9){
@@ -166,7 +217,7 @@ bool parseArgs(int argc,const char *argv[],bool *huffman,bool *bwt,bool *rl,int 
 				string command = argRead.substr(0,equalSignPos);
 				string number = argRead.substr(equalSignPos+1,string::npos);
 				int  numberInt = atoi(number.c_str());
-				if(command=="--textblck" && numberInt>0){
+				if(command=="--txtblck" && numberInt>0){
 					*blockSize = numberInt;
 					continue;
 				}
