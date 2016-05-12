@@ -50,7 +50,7 @@ bool BWTCompare::operator() (int i,int j){
 	// 		return false;
 	// 	}
 	// }
-	return true;
+	return false;
 }
 BWTCompare::BWTCompare(string str){
 	this->str = str;
@@ -145,10 +145,14 @@ string BWTransform::decodeBlock(string block,int a){
 string BWTransform::encodeBlock(string block,int *a){
 	string result;
 	int blockSize = block.length();
-	vector<int> orderedIndexes(blockSize);
+	vector<int> orderedIndexes;
 	for(int i=0;i<blockSize;i++){
-		orderedIndexes[i]=i;
+		orderedIndexes.push_back(i);
 	}
+	// for(vector<int>::iterator it=orderedIndexes.begin();it!=orderedIndexes.end();it++){
+	// 	if(*it<0 || *it>116) cout<<*it<<" ";
+	// }
+	// cout <<endl;
 	// cout<<"ENCODING BLOCK "<<block<<endl;
 	BWTCompare myComp = BWTCompare(block);
 	sort(orderedIndexes.begin(),orderedIndexes.end(),myComp);

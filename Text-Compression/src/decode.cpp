@@ -1,0 +1,147 @@
+#include <cstdio>
+#include <string>
+#include <algorithm>
+#include <vector>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include "runLength.hpp"
+#include "BWTransform.hpp"
+#include "CompressionConfig.hpp"
+
+using namespace std;
+
+#define BUFFER_SIZE 4096
+
+
+void mainDecodeBWT(istream &inFile,ostream &outFile,BWTConfig &config);
+void mainDecodeRunLength(iostream &inFile,ostream &outFile,RunLengthConfig &config,bool binary);
+bool parseArgs(int argc,const char *argv[],string &inFileName,string &outFileName);
+
+int main(int argc, char const *argv[])
+{
+	
+	char bufferIn[BUFFER_SIZE];
+	char bufferOut[BUFFER_SIZE];
+	string filenameIn;
+	string filenameOut;
+	fstream inFile;
+	fstream outFile;
+	string encodedString;
+	stringstream outStrStream;
+	CompressionConfig compConfig;
+
+
+	if(!parseArgs(argc,argv,filenameIn,filenameOut)){
+		cerr<<"usage: encode -i <file_name> -o <out_file>"<<endl;
+		exit(EXIT_FAILURE);
+	}
+	// filenameIn=argv[1]; 
+	// filenameOut=argv[2]; 
+
+	// inFile.rdbuf()->pubsetbuf(bufferIn,BUFFER_SIZE);
+	// outFile.rdbuf()->pubsetbuf(bufferOut,BUFFER_SIZE);
+
+	inFile.open(filenameIn.c_str(),ios_base::in);
+	if(!inFile.is_open()){
+		cerr<<"ERROR: Input File not Found: "<<filenameIn<<endl;
+		exit(EXIT_FAILURE);
+	}
+
+	outFile.open(filenameOut.c_str(),ios_base::out | ios_base::binary );
+	if(!outFile.is_open()){
+		cerr<<"ERROR: Output File could not be created: "<<filenameOut<<endl;
+		exit(EXIT_FAILURE);
+	}
+	cout<<"Decoding"<<endl;
+	compConfig.parseHeader(inFile);
+	if(compConfig.bwtConfig.blockSize>0 && compConfig.rlConfig.maxBits>=0){
+		//It has been encoded aplying first BWT and then RunLength
+		cout<<"\tEncoding type detected: BWT => Run Length"<<endl;
+		stringstream intermediteStringStream;
+		cout<<"\tDecoding Run Length"<<endl;
+		mainDecodeRunLength(inFile,intermediteStringStream,compConfig.rlConfig,true);
+		cout<<"\tDecoding BWT"<<endl;
+		mainDecodeBWT(intermediteStringStream,outStrStream,compConfig.bwtConfig);
+	}else if(compConfig.bwtConfig.blockSize>0){
+		//It has been encoded only using bwt
+		cout<<"\tEncoding type detected: BWT"<<endl;
+		cout<<"\tDecoding BWT"<<endl;
+		mainDecodeBWT(inFile,outStrStream,compConfig.bwtConfig);
+	}else if(compConfig.rlConfig.maxBits>=0){
+		//It has been encoded only using run length
+		cout<<"\tEncoding type detected: Run Length"<<endl;
+		cout<<"\tDecoding Run Length"<<endl;
+		mainDecodeRunLength(inFile,outStrStream,compConfig.rlConfig,true);
+	}
+	inFile.close();
+	cout<<"Wiritng to File"<<endl;
+	outFile<<outStrStream.str();
+	outFile.close();
+	// cout<<decodedString;
+
+	return 0;
+}
+
+void mainDecodeBWT(istream &inFile,ostream &outFile,BWTConfig &config){
+	
+	string decodedString;
+	
+
+	decodedString= BWTransform::decodeStream(inFile,config.blockSize,config.aVector);
+	
+	//Writing to File
+	
+	outFile<<decodedString;
+	
+	// cout<<"DEBUG: "<<decodedString<<endl;
+
+	// cout<<encodedString;
+
+}
+
+void mainDecodeRunLength(iostream &inFile,ostream &outFile,RunLengthConfig &config,bool binary){
+	if(binary){
+		string encodedString = binToStrRunLength(inFile,config.maxBits);
+		stringstream encodedStringStream(encodedString);
+		string decodedString= decodeRunLength(encodedStringStream);
+
+		outFile<<decodedString;
+	}else{
+
+		string decodedString= decodeRunLength(inFile);
+
+		outFile<<decodedString;
+	}
+}
+
+
+bool parseArgs(int argc,const char *argv[],string &inFileName,string &outFileName){
+	if(argc<5){
+		cerr<<"ERROR: Unexpected numberof argumets. Expected 4. Found: "<<argc-1<<endl;
+		return false;
+	}
+	string argRead;
+	for(int i=1;i<argc;i++){
+		argRead = argv[i];
+		if(argRead=="-i"){
+			if(i+1>=argc){
+				cerr<<"Name of file Expected after -i"<<endl;
+				return false;
+			}
+			inFileName=argv[i+1];
+			i++;
+		}else if(argRead=="-o"){
+			if(i+1>=argc){
+				cerr<<"Name of file Expected after -o"<<endl;
+				return false;
+			}
+			outFileName=argv[i+1];
+			i++;
+		}else{
+			cerr<<"ERROR: Unexpected argument found: "<<argv[i]<<endl;
+			return false;
+		}
+	}
+	return true;
+}
