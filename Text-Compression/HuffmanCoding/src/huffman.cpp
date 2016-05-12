@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -10,6 +9,8 @@
 #define LEFT_BIT 0
 #define RIGHT_BIT 1
 using namespace std;
+
+int validBitsLastByte = 0;
 
 // Node structure of the Huffman's Tree
 class Node {
@@ -52,20 +53,12 @@ class Node {
 	char getCode() {
 		return code;
 	}
-
-	Node getLeft() {
-		return *left;
-	}
 	
-	Node* leftPtr() {
+	Node* getLeft() {
 		return left;
 	}
 	
-	Node getRight() {
-		return *right;
-	}
-
-	Node* rightPtr() {
+	Node* getRight() {
 		return right;
 	}
 
@@ -76,8 +69,18 @@ class Node {
 
 // The root of the Huffman's tree
 Node huffmanTreeRoot;
+
 // Code table to store char - code
-map<char, vector<char> > char_codeVector;
+std::map<char, vector<char> > char_codeVector;
+
+// My 'garbage collector'
+std::vector<Node*> collector;
+
+void freeDynamicMemory() {
+	for (vector<Node*>::iterator it = collector.begin(); it != collector.end(); it++) {
+		delete *it;
+	}
+}
 
 struct NodeComparison {
 	bool operator() (Node &a, Node &b) const {
@@ -100,10 +103,21 @@ void buildHuffmanTree(map<char, long> &char_freq) {
 	}
 
 	// Creating inner nodes of the Huffman tree
-	while (pq.size() > 1) {
-		Node a = pq.top(); pq.pop(); a.setCode(0);
-		Node b = pq.top(); pq.pop(); b.setCode(1);
-		Node parent( (a.getFrequency()+b.getFrequency()), new Node(a), new Node(b) );
+	if (pq.size() > 1) {
+		while (pq.size() > 1) {
+			Node a = pq.top(); pq.pop(); a.setCode(0);
+			Node b = pq.top(); pq.pop(); b.setCode(1);
+			Node *dynamicA = new Node(a);
+			Node *dynamicB = new Node(b);
+			Node parent( (a.getFrequency()+b.getFrequency()), dynamicA, dynamicB );
+			pq.push(parent);
+			collector.push_back(dynamicA);	collector.push_back(dynamicB); 
+		}
+	}
+	else { // The tree has just one leaf: append it to the parent = root
+		Node c = pq.top(); pq.pop(); c.setCode(0);
+		Node *dynamicN = new Node(c);
+		Node parent(c.getFrequency(), dynamicN, NULL);
 		pq.push(parent);
 	}
 	huffmanTreeRoot = pq.top(); pq.pop();
@@ -114,18 +128,22 @@ void buildHuffmanTree(map<char, long> &char_freq) {
  * @param Node 			no 			current node to process
  * @param vector<char> 	codeVector	vector to store the 'bits' of the code
  */
-void createCodeTable(Node no, vector<char> codeVector=vector<char>()) {
-	if (no.isLeaf()) {
-		char_codeVector[no.getChar()] = codeVector;
+void createCodeTable(Node *no, vector<char> codeVector=vector<char>()) {
+	if (no->isLeaf()) {
+		char_codeVector[no->getChar()] = codeVector;
 		return;
 	}
 	// Go to the left
-	codeVector.push_back(LEFT_BIT);
-	createCodeTable(no.getLeft(), codeVector);
+	if (no->getLeft() != NULL) {
+		codeVector.push_back(LEFT_BIT);
+		createCodeTable(no->getLeft(), codeVector);
+	}
 
 	// Go to the right
-	codeVector.pop_back(); codeVector.push_back(RIGHT_BIT);
-	createCodeTable(no.getRight(), codeVector);
+	if (no->getRight() != NULL) {
+		codeVector.pop_back(); codeVector.push_back(RIGHT_BIT);
+		createCodeTable(no->getRight(), codeVector);
+	}
 }
 
 /**
@@ -204,7 +222,12 @@ void huffmanEncode(ifstream &inFile, string outFileName) {
 			// outFile << str;
 			// printBitString(str);
 			///////////////////////////////////////////////////
-			outFile << bitStream.getString();
+			validBitsLastByte = bitStream.getBitsWriteCounter();
+			cout << " Number of valid bits in the last byte: " << validBitsLastByte <<endl;
+			string str = bitStream.getString();
+			printBitString(str);
+			outFile << str;
+			// outFile << bitStream.getString();
 		}
 		outFile.close();
 	}
@@ -221,24 +244,38 @@ void huffmanDecode(ifstream &inFile, string outFileName) {
 	char byte;
 	char bit;
 	char mask = 0x80;
+	long long iniOffset, 
+			inLength, 
+			byteCounter = 0; // Used to know when the last byte was reached
 	ofstream outFile;
-	string buffer;
+	string buffer = "";
+
+	// Get the initial offset of the inFile
+	iniOffset = inFile.tellg();
+
+	// Get the length of the inFile
+	inFile.seekg(0, inFile.end);
+	inLength = inFile.tellg();
+	inFile.seekg(iniOffset, inFile.beg);
+	byteCounter = inLength - iniOffset;
 
 	Node *currNode = &huffmanTreeRoot;
 	outFile.open(outFileName.c_str(), ios::out | ios::trunc);
-	while (!inFile.eof()) {
+	while (!inFile.eof() && byteCounter--) {
 		inFile.get(byte);
 		for (int i = 0; i < 8; i++) {
+			// The last byte approach: just the valid bits must be considered
+			if (byteCounter == 0 && i >= validBitsLastByte)
+				break;
 			bit = (byte & mask);
 			byte <<= 1;
 			if (bit == LEFT_BIT) {
-				currNode = currNode->leftPtr();
+				currNode = currNode->getLeft();
 			}
 			else {
-				currNode = currNode->rightPtr();
+				currNode = currNode->getRight();
 			}
 			if (currNode->isLeaf()) {
-				// cout << currNode->getChar();
 				buffer += currNode->getChar();
 				if (buffer.length() == SIZEBUFFER) {
 					outFile << buffer;
@@ -266,10 +303,14 @@ void printCodeTable() {
 	}
 }
 
-void printHuffmanTree(Node &no) {
-	if (no.isLeaf()) {
-		cout << "\t- (LEAF) char: " << no.getChar() << ", frequency: " << no.getFrequency()  << ", code: ";
-		if (no.getCode() & 1) {
+/**
+ * DELETE
+ * @param no [description]
+ */
+void printHuffmanTree(Node *no) {
+	if (no->isLeaf()) {
+		cout << "\t- (LEAF) char: " << no->getChar() << ", frequency: " << no->getFrequency()  << ", code: ";
+		if (no->getCode() & 1) {
 			cout << "1\n";
 		}
 		else {
@@ -277,12 +318,14 @@ void printHuffmanTree(Node &no) {
 		}
 		return;
 	}
-	cout << "  - (INNER) frequency: " << no.getFrequency() << ", code: " << (int)no.getCode() << "\n";
-	Node n = no.getLeft();
-	printHuffmanTree(n);
-	n = no.getRight();
-	printHuffmanTree(n);
+	cout << "  - (INNER) frequency: " << no->getFrequency() << ", code: " << (int)no->getCode() << "\n";
+	
+	if (no->getLeft() != NULL)
+		printHuffmanTree(no->getLeft());
+	if (no->getRight() != NULL)
+		printHuffmanTree(no->getRight());
 }
+
 
 void printMap(map<char, long>& m) {
 	cout << " >> Frequency Table:\n";
@@ -302,17 +345,6 @@ int main(int argc, char const *argv[]) {
 	inFileName  = argv[1];
 	outFileName = argv[2];
 
-
-	// MyIOBitStream bitStream;
-	// bitStream.appendBit(false);
-	// bitStream.appendBit(true);
-	// bitStream.appendBit(false);
-	// bitStream.appendBit(false);
-	// bitStream.appendBit(false);
-	// bitStream.appendBit(false);
-	// bitStream.appendBit(false);
-	// bitStream.appendBit(false);
-
 	inFile.open(inFileName.c_str());
 	if (inFile.is_open()) {
 		char_freq = calculateFrequency(inFile);
@@ -323,7 +355,7 @@ int main(int argc, char const *argv[]) {
 
 		// printHuffmanTree(huffmanTreeRoot);
 		
-		createCodeTable(huffmanTreeRoot);
+		createCodeTable(&huffmanTreeRoot);
 		
 		printCodeTable();
 		
@@ -332,7 +364,7 @@ int main(int argc, char const *argv[]) {
 		inFile.close();
 		inFile.clear(); inFile.open(outFileName.c_str(), ios::in | ios::binary);
 		
-		outFileName = "text50huffmanDecode.txt";
+		outFileName = "inhuffmanDecode.txt";
 		huffmanDecode(inFile, outFileName);
 		inFile.close();
 	}

@@ -24,6 +24,7 @@
 			bool getNextBit();
 			char getNextByte();
 			int getBitsReadCounter();
+			int getBitsWriteCounter();
 			bool eof();
 			//CUIDADO: o ponteiro de leitura da stream eh avancado ao chamar esse metodo
 			//foi projetado para ser chamado somente no final

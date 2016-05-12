@@ -143,3 +143,6 @@ int MyIOBitStream::getBitsReadCounter(){
 bool MyIOBitStream::eof(){
 	return this->internalEof;
 }
+int MyIOBitStream::getBitsWriteCounter(){
+	return this->bitCounterWrite;
+}
