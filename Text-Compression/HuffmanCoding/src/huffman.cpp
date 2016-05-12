@@ -10,8 +10,6 @@
 #define RIGHT_BIT 1
 using namespace std;
 
-int validBitsLastByte = 0;
-
 // Node structure of the Huffman's Tree
 class Node {
  private:
@@ -76,6 +74,7 @@ std::map<char, vector<char> > char_codeVector;
 // My 'garbage collector'
 std::vector<Node*> collector;
 
+// TODO: 
 void freeDynamicMemory() {
 	for (vector<Node*>::iterator it = collector.begin(); it != collector.end(); it++) {
 		delete *it;
@@ -89,15 +88,15 @@ struct NodeComparison {
 };
 
 /**
- * Build the Huffman's tree
- * @param map<char, long>  char_freq
+ * Build the Huffman's tree based on the frequency of each character
+ * @param map<char, long>	char_freq 	stores the frequency of each character
  */
-void buildHuffmanTree(map<char, long> &char_freq) {
+void buildHuffmanTree(std::map<char, long long> &char_freq) {
 	// Stores the nodes. The top node has the smallest frequency value
 	priority_queue<Node, vector<Node>, NodeComparison> pq;
 
 	// Inserting the leaves into the pq
-	for (map<char, long>::iterator it = char_freq.begin(); it != char_freq.end(); it++) {
+	for (map<char, long long>::iterator it = char_freq.begin(); it != char_freq.end(); it++) {
 		Node l(it->second, it->first);
 		pq.push(l);
 	}
@@ -128,7 +127,7 @@ void buildHuffmanTree(map<char, long> &char_freq) {
  * @param Node 			no 			current node to process
  * @param vector<char> 	codeVector	vector to store the 'bits' of the code
  */
-void createCodeTable(Node *no, vector<char> codeVector=vector<char>()) {
+void createCodeTable(Node *no, std::vector<char> codeVector=vector<char>()) {
 	if (no->isLeaf()) {
 		char_codeVector[no->getChar()] = codeVector;
 		return;
@@ -150,8 +149,8 @@ void createCodeTable(Node *no, vector<char> codeVector=vector<char>()) {
  * Calculate the frequency that a character occurs in the file
  * @param ifstream inFile input file
  */
-map<char, long> calculateFrequency(ifstream &inFile) {
-	map<char, long> char_freq;
+map<char, long long> calculateFrequency(std::istream &inFile) {
+	map<char, long long> char_freq;
 	char value;
 	while (inFile.get(value)) {
 		if (char_freq.find(value) == char_freq.end()) {
@@ -164,7 +163,7 @@ map<char, long> calculateFrequency(ifstream &inFile) {
 	return char_freq;
 }
 
-void printBitString(string str) {
+void printBitString(std::string str) {
 	char aux;
 	char mask = 0x80;
 	for (int i = 0; i < str.length(); i++) {
@@ -176,10 +175,61 @@ void printBitString(string str) {
 	}
 }
 
-void huffmanEncode(ifstream &inFile, string outFileName) {
+
+void writeHuffmanHeader(std::ofstream &outFile, std::map<char, long long> &char_freq, int validBitsLastByte) {
+	long long length = char_freq.size(); // The number of pairs char-frequency that will appear
+	
+	cout << " validBitsLastByte: " << validBitsLastByte  << ", length: " << length<<endl;
+	// Write H - Huffman Algorithm
+	outFile << "H ";
+	outFile << validBitsLastByte;
+	outFile << " ";
+	outFile << length;
+	outFile << " ";
+
+	for (map<char, long long>::iterator it = char_freq.begin(); it != char_freq.end(); it++) {
+		outFile << it->first << " " << it->second << " ";
+	}
+	// Write the final delimiter
+	outFile << (char)0; // TODO : DELETE THIS BITCH
+}
+
+std::map<char, long long> readHuffmanHeader(std::ifstream &inFile, int *validBitsLastByte) {
+	long long length, frequency;
+	char space, character, space2, algorithm;
+	map<char, long long> char_freq;
+
+	inFile >> algorithm;
+	cout << " + algorithm: [" << algorithm <<"]" <<endl;
+	inFile >> (*validBitsLastByte);
+	cout << " + validBitsLastByte: " << *validBitsLastByte <<endl;
+	inFile >> length;
+	cout << " + length: " << length << endl;
+
+	inFile.get(space);
+	cout << " - It was suppose to be a space: [" << space << "]\n";
+
+	for (int i = 0; i < length; i++) {
+		inFile.get(character);
+		inFile.get(space);
+		inFile >> frequency;
+		inFile.get(space2);
+		cout << "character: " << character << ", space: "<< space << ", frequency: "<< frequency << ", space2: " << space2 <<endl;
+		cout << "char_freq["<<character<<"] : " << frequency << endl;
+		char_freq[character] = frequency;
+	}
+	inFile.get(character);
+	cout << " - It was suppose to be a 0: [" << character << "]\n";
+	return char_freq;
+}
+
+
+void huffmanEncode(std::istream &inFile, std::map<char, long long> &char_freq, std::string outFileName) {
 	char value;
 	int buffCnt;
+	int validBitsLastByte = 0;
 	ofstream outFile;
+	stringstream ssFileEncoded;
 	vector<char> codeVector;
 	MyIOBitStream bitStream;
 
@@ -209,7 +259,8 @@ void huffmanEncode(ifstream &inFile, string outFileName) {
 					// printBitString(str1);
 					// outFile << str1;
 					//////////////////////////////////////////
-					outFile << bitStream.getString();
+					// outFile << bitStream.getString();
+					ssFileEncoded << bitStream.getString();
 					buffCnt = 0;
 				}
 			}
@@ -224,11 +275,12 @@ void huffmanEncode(ifstream &inFile, string outFileName) {
 			///////////////////////////////////////////////////
 			validBitsLastByte = bitStream.getBitsWriteCounter();
 			cout << " Number of valid bits in the last byte: " << validBitsLastByte <<endl;
-			string str = bitStream.getString();
-			printBitString(str);
-			outFile << str;
-			// outFile << bitStream.getString();
+			ssFileEncoded << bitStream.getString();
+			// outFile << bitStream.getString(); // TODO: Descomentar essa linha e remover as de cima!!
 		}
+		// Write the header
+		writeHuffmanHeader(outFile, char_freq, validBitsLastByte);
+		outFile << ssFileEncoded;
 		outFile.close();
 	}
 	else {
@@ -236,10 +288,10 @@ void huffmanEncode(ifstream &inFile, string outFileName) {
 	}
 }
 
-void huffmanDecode(ifstream &inFile, string outFileName) {
+void huffmanDecode(std::istream &inFile, std::string outFileName, int validBitsLastByte) {
 	/**
 		TODO:
-		- get the number of valid bits on the last byte and use it to check
+		- SET the number of valid bits BEFORE CALL THIS FUNCTION!!
 	 */
 	char byte;
 	char bit;
@@ -252,12 +304,15 @@ void huffmanDecode(ifstream &inFile, string outFileName) {
 
 	// Get the initial offset of the inFile
 	iniOffset = inFile.tellg();
+	cout << " iniOffset: " << iniOffset<<endl;
 
 	// Get the length of the inFile
 	inFile.seekg(0, inFile.end);
 	inLength = inFile.tellg();
 	inFile.seekg(iniOffset, inFile.beg);
 	byteCounter = inLength - iniOffset;
+
+	cout << " byteCounter: "<<byteCounter<<endl;
 
 	Node *currNode = &huffmanTreeRoot;
 	outFile.open(outFileName.c_str(), ios::out | ios::trunc);
@@ -327,9 +382,9 @@ void printHuffmanTree(Node *no) {
 }
 
 
-void printMap(map<char, long>& m) {
+void printMap(std::map<char, long long>& m) {
 	cout << " >> Frequency Table:\n";
-	for (map<char, long>::iterator it = m.begin(); it != m.end(); it++) {
+	for (map<char, long long>::iterator it = m.begin(); it != m.end(); it++) {
 		cout << " " << it->first << " -> " << it->second << "\n";
 	}
 }
@@ -338,8 +393,9 @@ int main(int argc, char const *argv[]) {
 	/* Input  Parameters*/
 	ifstream inFile;
 	ofstream outFile;
-	map<char, long> char_freq;
+	map<char, long long> char_freq;
 	string inFileName, outFileName;
+	int validBitsLastByte;
 	char value;
 
 	inFileName  = argv[1];
@@ -359,13 +415,28 @@ int main(int argc, char const *argv[]) {
 		
 		printCodeTable();
 		
-		huffmanEncode(inFile, outFileName);
+		huffmanEncode(inFile, char_freq, outFileName);
 
 		inFile.close();
-		inFile.clear(); inFile.open(outFileName.c_str(), ios::in | ios::binary);
+		freeDynamicMemory();
+
+		//// Decode test
+		inFile.clear(); 
+		inFile.open(outFileName.c_str(), ios::in | ios::binary);
+		char_freq = readHuffmanHeader(inFile, &validBitsLastByte);
+		
+		cout << " >>> char_freq after read Header:"<<endl;
+		printMap(char_freq);
+
+
+		cout << " >>> Building new Huffman tree"<<endl;
+		buildHuffmanTree(char_freq);
+		
+		createCodeTable(&huffmanTreeRoot);
+		printCodeTable();
 		
 		outFileName = "inhuffmanDecode.txt";
-		huffmanDecode(inFile, outFileName);
+		huffmanDecode(inFile, outFileName, validBitsLastByte);
 		inFile.close();
 	}
 
