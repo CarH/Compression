@@ -273,7 +273,7 @@ string decodeRunLength(istream &inFile){
 	while(!inFile.eof()){
 		isFileEmpty=false;
 		inFile>>currentChar;
-		// cout<<" Current: "<<currentChar<<" previousChar: "<<previousChar<<endl;
+		cout<<" Current: "<<currentChar<<" previousChar: "<<previousChar<<endl;
 		if(!inFile.eof()){
 			outResultStream<<previousChar;
 			if(previousChar==currentChar){
@@ -283,7 +283,7 @@ string decodeRunLength(istream &inFile){
 			}
 			if(counter==3){
 				inFile>>sequenceLength;
-				// cout<<"\t Sequence Length: "<<sequenceLength<<endl;
+				cout<<"\t Sequence Length: "<<sequenceLength<<endl;
 				inFile>>trash; //le o espaco vazio
 				outResultStream<<currentChar;
 				for(long long int i=0;i<sequenceLength ;i++){

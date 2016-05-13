@@ -5,9 +5,11 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include "huffman.hpp"
 #include "runLength.hpp"
 #include "BWTransform.hpp"
 #include "CompressionConfig.hpp"
+
 
 using namespace std;
 
@@ -77,6 +79,7 @@ int main(int argc, char const *argv[])
 		cout<<"\tEncoding type detected: Run Length => Huffman"<<endl;
 		cout<<"\tDecoding Huffman"<<endl;
 		mainDecodeHuffman(inFile,intermediteStringStream,compConfig.huffConfig);
+		cout<<"intermediteStringStream: "<<intermediteStringStream.str()<<endl;
 		cout<<"\tDecoding Run Length"<<endl;
 		mainDecodeRunLength(intermediteStringStream,outStrStream,compConfig.rlConfig,false);
 	}else if(compConfig.huffConfig.isValid 
@@ -110,8 +113,7 @@ int main(int argc, char const *argv[])
 		stringstream intermediteStringStream;
 		cout<<"\tEncoding type detected: Huffman"<<endl;
 		cout<<"\tDecoding Huffman"<<endl;
-		mainDecodeHuffman(inFile,intermediteStringStream,compConfig.huffConfig);
-
+		mainDecodeHuffman(inFile,outStrStream,compConfig.huffConfig);
 	}else{
 		cout<<"No algorithms detected. Exiting"<<endl;
 		inFile.close();
@@ -160,9 +162,7 @@ void mainDecodeRunLength(iostream &inFile,ostream &outFile,RunLengthConfig &conf
 }
 
 void mainDecodeHuffman(iostream &inFile,ostream &outFile,HuffmanConfig &config){
-	cerr<<"DEBUG: mainDecodeHuffman To Be Implemented"<<endl;
-
-	outFile<<inFile.rdbuf();
+	huffmanDecode(inFile, outFile, config.validBitsLastByte);
 }
 
 

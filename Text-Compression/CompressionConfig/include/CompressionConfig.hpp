@@ -1,5 +1,6 @@
 #include <sstream>
 #include <string>
+#include <map>
 #include <sstream>
 #include <iostream>
 #include <vector>
@@ -20,6 +21,8 @@
 	};
 	class HuffmanConfig{
 		public:	
+			std::map<char, long long> char_freq;
+			int validBitsLastByte; 
 			bool isValid;
 			HuffmanConfig();
 			~HuffmanConfig();

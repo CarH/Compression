@@ -2,6 +2,10 @@
 #include "myIoBitStream.hpp"
 using namespace std;
 
+Node huffmanTreeRoot;
+std::map<char, std::vector<char> > char_codeVector;
+std::vector<Node*> collector;
+
 Node::Node() {}
 Node::Node(long f, Node *l, Node *r) {
 	freq 	= f;
@@ -87,7 +91,7 @@ void buildHuffmanTree(std::map<char, long long> &char_freq) {
 	huffmanTreeRoot = pq.top(); pq.pop();
 }
 
-void createCodeTable(Node *no, std::vector<char> codeVector=std::vector<char>()) {
+void createCodeTable(Node *no, std::vector<char> codeVector) {
 	if (no->isLeaf()) {
 		char_codeVector[no->getChar()] = codeVector;
 		return;
@@ -119,42 +123,27 @@ map<char, long long> calculateFrequency(std::istream &inFile) {
 	return char_freq;
 }
 
-void printBitString(std::string str) {
-	char aux;
-	char mask = 0x80;
-	for (int i = 0; i < str.length(); i++) {
-		aux = str[i];
-		for (int j = 0; j < 8; j++) {
-			cout << ((aux & mask) ? "1" : "0");
-			aux = aux << 1;
-		}
-	}
-}
-
-void writeHuffmanHeader(std::ofstream &outFile, std::map<char, long long> &char_freq, int validBitsLastByte) {
+void writeHuffmanHeader(std::ostream &outFile, std::map<char, long long> &char_freq, int validBitsLastByte) {
 	long long length = char_freq.size(); // The number of pairs char-frequency that will appear
 	
 	cout << " validBitsLastByte: " << validBitsLastByte  << ", length: " << length<<endl;
-	// Write H - Huffman Algorithm
-	outFile << "H ";
-	outFile << validBitsLastByte;
-	outFile << " ";
-	outFile << length;
-	outFile << " ";
+	
+	outFile << "H ";					// H - Huffman Algorithm
+	outFile << validBitsLastByte;		// valid bits of the last byte
+	outFile << " ";						// space separator
+	outFile << length;					// size of the char - frequency list
+	outFile << " ";						// space separator
 
 	for (map<char, long long>::iterator it = char_freq.begin(); it != char_freq.end(); it++) {
 		outFile << it->first << " " << it->second << " ";
 	}
-	outFile << (char)0;
 }
 
-std::map<char, long long> readHuffmanHeader(std::ifstream &inFile, int *validBitsLastByte) {
+std::map<char, long long> readHuffmanHeader(std::istream &inFile, int *validBitsLastByte) {
 	long long length, frequency;
 	char space, character, space2, algorithm;
 	map<char, long long> char_freq;
-
-	inFile >> algorithm;
-	cout << " + algorithm: [" << algorithm <<"]" <<endl;
+	inFile >> skipws;
 	inFile >> (*validBitsLastByte);
 	cout << " + validBitsLastByte: " << *validBitsLastByte <<endl;
 	inFile >> length;
@@ -172,66 +161,52 @@ std::map<char, long long> readHuffmanHeader(std::ifstream &inFile, int *validBit
 		cout << "char_freq["<<character<<"] : " << frequency << endl;
 		char_freq[character] = frequency;
 	}
-	inFile.get(character);
-	cout << " - It was suppose to be a 0: [" << character << "]\n";
 	return char_freq;
 }
 
 
-void huffmanEncode(std::istream &inFile, std::map<char, long long> &char_freq, std::string outFileName) {
+std::string huffmanEncode(std::istream &inFile, std::map<char, long long> &char_freq, int *validBitsLastByte) {
 	char value;
 	int buffCnt;
-	int validBitsLastByte = 0;
-	ofstream outFile;
 	stringstream ssFileEncoded;
 	vector<char> codeVector;
 	MyIOBitStream bitStream;
 
 	inFile.clear(); inFile.seekg(0, inFile.beg);
-	outFile.open(outFileName.c_str(), ios::binary | ios::in | ios::trunc);
-	if (outFile.is_open()) {
-		buffCnt = 0;
-		while (inFile.get(value)) {
-			codeVector = char_codeVector[value];
-			// for each bit of the code
-			for (int i = 0; i < codeVector.size(); i++) {
-				if (codeVector[i] & 1) {
-					bitStream.appendBit(true);
-				}
-				else {
-					bitStream.appendBit(false);
-				}
-				buffCnt++;
-				if (buffCnt == SIZEBUFFER) { // Record the buffer into the output file
-					ssFileEncoded << bitStream.getString();
-					buffCnt = 0;
-				}
+	buffCnt = 0;
+	while (inFile.get(value)) {
+		codeVector = char_codeVector[value];
+		// for each bit of the code
+		for (int i = 0; i < codeVector.size(); i++) {
+			if (codeVector[i] & 1) {
+				bitStream.appendBit(true);
+			}
+			else {
+				bitStream.appendBit(false);
+			}
+			buffCnt++;
+			if (buffCnt == SIZEBUFFER) { // Record the buffer into the output file
+				ssFileEncoded << bitStream.getString();
+				buffCnt = 0;
 			}
 		}
-		if (buffCnt > 0) {
-			validBitsLastByte = bitStream.getBitsWriteCounter();
-			cout << " Number of valid bits in the last byte: " << validBitsLastByte <<endl;
-			ssFileEncoded << bitStream.getString();
-		}
-		// Write the header
-		writeHuffmanHeader(outFile, char_freq, validBitsLastByte);
-		// Write the encoded file into the outFile
-		outFile << ssFileEncoded.str();
-		outFile.close();
 	}
-	else {
-		cerr << " ERROR: Could not open the file " << outFileName << "\n";
+	if (buffCnt > 0) {
+		*validBitsLastByte = bitStream.getBitsWriteCounter();
+		cout << " Number of valid bits in the last byte: " << *validBitsLastByte <<endl;
+		ssFileEncoded << bitStream.getString();
 	}
+	
+	return ssFileEncoded.str();
 }
 
-void huffmanDecode(std::istream &inFile, std::string outFileName, int validBitsLastByte) {
+void huffmanDecode(std::istream &inFile, std::ostream &outFile, int validBitsLastByte) {
 	char byte;
 	char bit;
 	char mask = 0x80;
 	long long iniOffset, 
 			inLength, 
 			byteCounter = 0; // Used to know when the last byte was reached
-	ofstream outFile;
 	string buffer = "";
 
 	// Get the initial offset of the inFile
@@ -247,7 +222,6 @@ void huffmanDecode(std::istream &inFile, std::string outFileName, int validBitsL
 	cout << " byteCounter: "<<byteCounter<<endl;
 
 	Node *currNode = &huffmanTreeRoot;
-	outFile.open(outFileName.c_str(), ios::out | ios::trunc);
 	while (!inFile.eof() && byteCounter--) {
 		inFile.get(byte);
 		for (int i = 0; i < 8; i++) {
@@ -274,7 +248,6 @@ void huffmanDecode(std::istream &inFile, std::string outFileName, int validBitsL
 	}
 	if (buffer.length() > 0)
 		outFile << buffer;
-	outFile.close();
 }
 
 void printHuffmanTree(Node *no) {
@@ -313,58 +286,4 @@ void printCodeTable() {
 		}
 		cout << "\n";
 	}
-}
-
-int main(int argc, char const *argv[]) {
-	/* Input  Parameters*/
-	ifstream inFile;
-	ofstream outFile;
-	map<char, long long> char_freq;
-	string inFileName, outFileName;
-	int validBitsLastByte;
-	char value;
-
-	inFileName  = argv[1];
-	outFileName = argv[2];
-
-	inFile.open(inFileName.c_str());
-	if (inFile.is_open()) {
-		char_freq = calculateFrequency(inFile);
-
-		printMap(char_freq);
-		
-		buildHuffmanTree(char_freq);
-
-		// printHuffmanTree(huffmanTreeRoot);
-		
-		createCodeTable(&huffmanTreeRoot);
-		
-		printCodeTable();
-		
-		huffmanEncode(inFile, char_freq, outFileName);
-
-		inFile.close();
-		freeDynamicMemory();
-
-		//// Decode test
-		inFile.clear(); 
-		inFile.open(outFileName.c_str(), ios::in | ios::binary);
-		char_freq = readHuffmanHeader(inFile, &validBitsLastByte);
-		
-		cout << " >>> char_freq after read Header:"<<endl;
-		printMap(char_freq);
-
-
-		cout << " >>> Building new Huffman tree"<<endl;
-		buildHuffmanTree(char_freq);
-
-		createCodeTable(&huffmanTreeRoot);
-		printCodeTable();
-		
-		outFileName = "outText50HuffmanDecode.txt";
-		huffmanDecode(inFile, outFileName, validBitsLastByte);
-		inFile.close();
-	}
-
-	return 0;
 }

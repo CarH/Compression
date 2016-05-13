@@ -1,4 +1,5 @@
 #include "CompressionConfig.hpp"
+#include "huffman.hpp"
 #include <cstdlib>
 #include <cstdio>
 using namespace std;
@@ -44,6 +45,7 @@ void CompressionConfig::parseHeader(istream &inFile){
 				break;
 			}
 			case 'H':{
+				huffConfig.isValid = true;
 				this->parseHeaderHuffman(inFile);
 				break;
 			}
@@ -57,7 +59,6 @@ void CompressionConfig::parseHeader(istream &inFile){
 	}
 
 }
-
 void CompressionConfig::writeHeader(ostream &outFile){
 	char nullChar = 0;
 	if(this->bwtConfig.blockSize>0){//if there is a BWT config set in this object
@@ -129,10 +130,12 @@ void CompressionConfig::writeHeaderRunLength(ostream &outFile,long long int maxB
 
 
 //================= HUFFMAN
+void CompressionConfig::writeHeaderHuffman(ostream &outFile){
+	// Write the header
+	writeHuffmanHeader(outFile, huffConfig.char_freq, huffConfig.validBitsLastByte);
+}
 void CompressionConfig::parseHeaderHuffman(istream &inFile){
 	cerr<<"DEBUG: CompressionConfig::parseHeaderHuffman To be Implemented"<<endl;
-
-}
-void CompressionConfig::writeHeaderHuffman(ostream &outFile){
-	cerr<<"DEBUG: CompressionConfig::writeHEaderHuffman To be Implemented"<<endl;
+	huffConfig.char_freq = readHuffmanHeader(inFile, &huffConfig.validBitsLastByte);
+	buildHuffmanTree(huffConfig.char_freq);
 }

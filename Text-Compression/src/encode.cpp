@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <locale>
+#include "huffman.hpp"
 #include "runLength.hpp"
 #include "BWTransform.hpp"
 #include "CompressionConfig.hpp"
@@ -72,6 +73,7 @@ int main(int argc, char const *argv[])
 		stringstream intermediateStringStream;
 		stringstream intermediateStringStream2;
 		compConfig.bwtConfig.blockSize=blockSize;
+		compConfig.huffConfig.isValid = true;
 		// cout<<"Block Size: "<<compConfig.bwtConfig.blockSize<<endl;
 		cout<<"\tEncoding BWT"<<endl;
 		mainEncodeBWT(inFile,intermediateStringStream,compConfig.bwtConfig);
@@ -85,7 +87,9 @@ int main(int argc, char const *argv[])
 		stringstream intermediateStringStream;
 		cout<<"\tEncoding type detected: Run Length => Huffman"<<endl;
 		cout<<"\tEncoding Run Length"<<endl;
+		compConfig.huffConfig.isValid = true;
 		mainEncodeRunLength(inFile,intermediateStringStream,compConfig.rlConfig,false);
+		cout<<"intermediteStringStream(E): "<<intermediateStringStream.str()<<endl;
 		inFile.close();
 		cout<<"\tEncoding Huffman"<<endl;
 		mainEncodeHuffman(intermediateStringStream,outStrStream,compConfig.huffConfig);
@@ -95,6 +99,7 @@ int main(int argc, char const *argv[])
 		compConfig.bwtConfig.blockSize=blockSize;
 		// cout<<"Block Size: "<<compConfig.bwtConfig.blockSize<<endl;
 		cout<<"\tEncoding BWT"<<endl;
+		compConfig.huffConfig.isValid = true;
 		mainEncodeBWT(inFile,intermediateStringStream,compConfig.bwtConfig);
 		inFile.close();
 		cout<<"\tEncoding Huffman"<<endl;
@@ -123,6 +128,7 @@ int main(int argc, char const *argv[])
 	}else if(huffman){
 		cout<<"\tEncoding type detected: Huffman"<<endl;
 		cout<<"\tEncoding Huffman"<<endl;
+		compConfig.huffConfig.isValid = true;
 		mainEncodeHuffman(inFile,outStrStream,compConfig.huffConfig);
 		inFile.close();
 	}else{
@@ -166,9 +172,24 @@ void mainEncodeRunLength(istream &inFile,ostream &outFile,RunLengthConfig &confi
 		outFile<<encodedString;
 	}
 }
-void mainEncodeHuffman(istream &inFile,ostream &outFile,HuffmanConfig &config){
-	cerr<<"HuffMan Encoding To Be Implemented"<<endl;
-	outFile<<inFile.rdbuf();
+void mainEncodeHuffman(istream &inFile,ostream &outFile,HuffmanConfig &config){	
+	string encodedString;
+
+	config.char_freq = calculateFrequency(inFile);
+
+	printMap(config.char_freq); // TODO DELETE
+	
+	buildHuffmanTree(config.char_freq);
+
+	createCodeTable(&huffmanTreeRoot);
+	
+	printCodeTable(); // TODO DELETE
+
+	encodedString = huffmanEncode(inFile, config.char_freq, &config.validBitsLastByte);
+	cout << "encodedString Huffman: "<<encodedString<<endl;
+	outFile << encodedString;
+
+	freeDynamicMemory();
 }
 
 
