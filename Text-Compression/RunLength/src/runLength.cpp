@@ -154,13 +154,15 @@ string encodeRunLength(istream &inFile,long long int *maxBits){
 
 	inFile>>std::noskipws;
 	
-	inFile>>currentChar;
+	if(inFile>>currentChar){
+		isFileEmpty=false;
+	}
 	nextCharToProcess=currentChar; //iguala para dar certo a logica do if apos o while
 	inFile>>nextCharToProcess;
 	sequenceLength=1;
 	while(!inFile.eof()){
 		// cout<<currentChar;
-		isFileEmpty=false;
+		
 		// cout<<"Current : "<<currentChar<<" NExt: "<<nextCharToProcess<<endl;
 		if(nextCharToProcess==currentChar){
 			sequenceLength++;
@@ -202,11 +204,13 @@ string encodeRunLength(istream &inFile,long long int *maxBits){
 
 	}
 	*maxBits=0;
-	while(maxSequenceLength!=0){
-		maxSequenceLength>>=1;
-		// cout<<"maxSequenceLength: "<<maxSequenceLength<<endl;
-		(*maxBits)++;
-	} 
+	if(maxSequenceLength>0){
+		while(maxSequenceLength!=0){
+			maxSequenceLength>>=1;
+			// cout<<"maxSequenceLength: "<<maxSequenceLength<<endl;
+			(*maxBits)++;
+		} 
+	}
 	return outResultStream.str();
 }
 
@@ -273,7 +277,7 @@ string decodeRunLength(istream &inFile){
 	while(!inFile.eof()){
 		isFileEmpty=false;
 		inFile>>currentChar;
-		cout<<" Current: "<<currentChar<<" previousChar: "<<previousChar<<endl;
+		// cout<<" Current: "<<currentChar<<" previousChar: "<<previousChar<<endl;
 		if(!inFile.eof()){
 			outResultStream<<previousChar;
 			if(previousChar==currentChar){
@@ -283,7 +287,7 @@ string decodeRunLength(istream &inFile){
 			}
 			if(counter==3){
 				inFile>>sequenceLength;
-				cout<<"\t Sequence Length: "<<sequenceLength<<endl;
+				// cout<<"\t Sequence Length: "<<sequenceLength<<endl;
 				inFile>>trash; //le o espaco vazio
 				outResultStream<<currentChar;
 				for(long long int i=0;i<sequenceLength ;i++){
