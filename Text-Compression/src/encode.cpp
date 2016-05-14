@@ -17,10 +17,38 @@
 using namespace std;
 
 
-
+/**
+ * It performs the calls necessary to encode the inputFile according to the BWT algorithm.
+ * @param inFile  Input data
+ * @param outFile Output stream where the encoded data must be written 
+ * @param config  Configuration parameters of BWT algorithm
+ */
 void mainEncodeBWT(istream &inFile,ostream &outFile,BWTConfig &config);
+/**
+ * It performs the calls necessary to encode the inputFile according to the Run Length algorithm.
+ * The Run Length algorithm may encode the sequence length as ASCII or as binary. 
+ * @param inFile  Input data
+ * @param outFile Output stream where the encoded data must be written
+ * @param config  Configuration parameters of Run Length algorithm
+ * @param binary  Indicates if the sequence length must be encoded as binary or as ASCII numbers
+ */
 void mainEncodeRunLength(istream &inFile,ostream &outFile,RunLengthConfig &config,bool binary);
 void mainEncodeHuffman(istream &inFile,ostream &outFile,HuffmanConfig &config);
+/**
+ * ParseArgs verifies the arguments passed to this program. It is expected that all 8 params is specified, setting
+ * it to false in case it is not desired. The txtblck param must be equal to an positive integer number,
+ * even if it is not used. The following params are expected:
+ * --btw=[true|false] --txtblck=<int_number> --huffman=[true|false] --runl=[true|false] -i <input_file_name> -o <output_file_name>
+ * @param  argc        Quantity of params,including the program name
+ * @param  argv        Params to be parsed
+ * @param  huffman     Ouput param. It is set to true if the huffman algorithm was requested
+ * @param  bwt         Ouput param. It is set to true if the BWT algorithm was requested
+ * @param  rl          Ouput param. It is set to true if the Run Length algorithm was requested
+ * @param  blockSize   Ouput param. It is set to the size of the block requested
+ * @param  inFileName  Ouput param. It is set to name of the input file read from the params
+ * @param  outFileName Ouput param. It is set to name of the output file read from the params
+ * @return             Returns true if no errors occurred during parsing. Returns false otherwise.
+ */
 bool parseArgs(int argc,const char *argv[],bool *huffman,bool *bwt,bool *rl,int *blockSize,string &inFileName,string &outFileName);
 
 int main(int argc, char const *argv[])
@@ -44,9 +72,9 @@ int main(int argc, char const *argv[])
 	char *inFileNameChar;
 	char *outFileNameChar;
 
-
+	//realiza a verficacao dos parametros
 	if(!parseArgs(argc,argv,&huffman,&bwt,&runl,&blockSize,filenameIn,filenameOut)){
-		cerr<<"usage: encode -i <input_file_name> -o <output_file_name> --btw=[true|false] --txtblck=[true|false] --huffman=[true|false] --runl=[true|false]"<<endl;
+		cerr<<"usage: encode -i <input_file_name> -o <output_file_name> --btw=[true|false] --txtblck=<int_number> --huffman=[true|false] --runl=[true|false]"<<endl;
 		exit(EXIT_FAILURE);
 	}
 	// filenameIn=inFileNameChar; 
@@ -68,6 +96,13 @@ int main(int argc, char const *argv[])
 	}
 
 	cout<<"Encoding"<<endl;
+	//verifica as flags booleanas retornadas pelo parse e chama as rotinas de codificacao adequadamente
+	//Caso mais de um algoritmo seja requisitado, foi escolhida a seguinte ordem:
+	//	BWT => Run Length => Huffman
+	//Caso Run length e Huffman sejam especificados juntos, o Run Length eh utilizado no modo ASCII.
+	//	Caso contrario, o run length eh utilizado no modo binario.
+	//	Essa decisao foi tomada pois o Huffman codifica a frequencia de cada byte. Se usar Run Length
+	//	no modo binario um byte nao significaria mais um character.
 	if(huffman && bwt && runl){
 		cout<<"\tEncoding type detected: BWT => Run Length => Huffman"<<endl;
 		stringstream intermediateStringStream;
@@ -79,6 +114,7 @@ int main(int argc, char const *argv[])
 		mainEncodeBWT(inFile,intermediateStringStream,compConfig.bwtConfig);
 		inFile.close();
 		cout<<"\tEncoding Run Length"<<endl;
+		//usa Run Length no modo ASCII
 		mainEncodeRunLength(intermediateStringStream,intermediateStringStream2,compConfig.rlConfig,false);
 		intermediateStringStream.str("");//forcing freeing of data (or trying to)
 		cout<<"\tEncoding Huffman"<<endl;
@@ -89,7 +125,7 @@ int main(int argc, char const *argv[])
 		cout<<"\tEncoding Run Length"<<endl;
 		compConfig.huffConfig.isValid = true;
 		mainEncodeRunLength(inFile,intermediateStringStream,compConfig.rlConfig,false);
-		cout<<"intermediteStringStream(E): "<<intermediateStringStream.str()<<endl;
+		// cout<<"intermediteStringStream(E): "<<intermediateStringStream.str()<<endl;
 		inFile.close();
 		cout<<"\tEncoding Huffman"<<endl;
 		mainEncodeHuffman(intermediateStringStream,outStrStream,compConfig.huffConfig);
@@ -186,7 +222,7 @@ void mainEncodeHuffman(istream &inFile,ostream &outFile,HuffmanConfig &config){
 	printCodeTable(); // TODO DELETE
 
 	encodedString = huffmanEncode(inFile, config.char_freq, &config.validBitsLastByte);
-	cout << "encodedString Huffman: "<<encodedString<<endl;
+	// cout << "encodedString Huffman: "<<encodedString<<endl;
 	outFile << encodedString;
 
 	freeDynamicMemory();
@@ -194,6 +230,7 @@ void mainEncodeHuffman(istream &inFile,ostream &outFile,HuffmanConfig &config){
 
 
 bool parseArgs(int argc,const char *argv[],bool *huffman,bool *bwt,bool *rl,int *blockSize,string &inFileName,string &outFileName){
+	
 	if(argc<9){
 		cerr<<"ERROR: Unexpected numberof argumets. Expected 8. Found: "<<argc-1<<endl;
 		return false;

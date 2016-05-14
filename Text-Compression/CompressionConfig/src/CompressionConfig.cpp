@@ -34,7 +34,7 @@ void CompressionConfig::parseHeader(istream &inFile){
 	char nullChar = 1;
 	inFile>>noskipws;
 	inFile.read(&encodingType,sizeof(char));
-	while(encodingType!=0){
+	while(encodingType!=0){ //le os identificadores de algoritmos ate achar o fim 
 		switch (encodingType){
 			case 'B':{
 				this->parseHeaderBWT(inFile,&((this->bwtConfig).blockSize),bwtConfig.aVector);
@@ -55,12 +55,15 @@ void CompressionConfig::parseHeader(istream &inFile){
 			}
 
 		}
+		
 		inFile.read(&encodingType,sizeof(char));
 	}
 
 }
 void CompressionConfig::writeHeader(ostream &outFile){
 	char nullChar = 0;
+	//verifica as variaveis de configuracao para saber qual algoritmo foi usado, chamando
+	//o respectivo headerWriter
 	if(this->bwtConfig.blockSize>0){//if there is a BWT config set in this object
 		this->writeHeaderBWT(outFile,this->bwtConfig.blockSize,this->bwtConfig.aVector);
 	}
@@ -70,6 +73,7 @@ void CompressionConfig::writeHeader(ostream &outFile){
 	if(this->huffConfig.isValid){
 		this->writeHeaderHuffman(outFile);
 	}
+	//padronizou-se que o header finalizar sempre com um byte 0;
 	outFile.write(&nullChar,sizeof(char));
 }
 

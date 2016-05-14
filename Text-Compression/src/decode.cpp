@@ -14,7 +14,10 @@
 using namespace std;
 
 #define BUFFER_SIZE 4096
-
+/*
+	Funcoes e logicas analogas as presentes em encode.cpp. Para maiores detalhes,
+	favor consultar os comentarios em encode.cpp, assim como a documentacao de CompressionConfig
+ */
 
 void mainDecodeBWT(istream &inFile,ostream &outFile,BWTConfig &config);
 void mainDecodeRunLength(iostream &inFile,ostream &outFile,RunLengthConfig &config,bool binary);
@@ -57,7 +60,16 @@ int main(int argc, char const *argv[])
 		exit(EXIT_FAILURE);
 	}
 	cout<<"Decoding"<<endl;
+	//Realiza a verificacao do Header e seta adequadamente os parametros em compConfig
 	compConfig.parseHeader(inFile);
+	/*
+		Verifica quais algoritmos foram lidos do header. Para isso, verifica as configuracoes em 
+		compConfig
+			Se BWT foi detectado, entao bwtConfig.blockSize>0 
+			Se Run Length foi detectado,entao compConfig.rlConfig.maxBits>=0
+			Se Huffman Detectado, entao compConfig.huffConfig.isValid ==true
+	 */
+
 	if(compConfig.bwtConfig.blockSize>0 
 		&& compConfig.rlConfig.maxBits>=0
 		&& compConfig.huffConfig.isValid

@@ -7,11 +7,12 @@ using namespace std;
 // TODO: melhorar comparacao...
 bool BWTCompare::operator() (int i,int j){
 	// return (i<j);
+	// 
 	string str1;
 	string str2;
 	int k=0;
-	//Testing the influence of compare complexity
-	// return i<j;
+	//compara as strings caracter a caracter.
+	//Variaveis i e j correspondem a posicoes na string original (armazenada em this->str)
 	while(k<(this->str).size()){
 		if(j==(this->str).size()){
 			j=0;
@@ -60,22 +61,26 @@ string BWTransform::decodeStream(std::istream &inFile,int blockSize,std::vector<
 	stringstream outStream;
 	char symbol;
 	inFile>>noskipws;
-	inFile>>symbol;
-	string blockToDecode;
-	
+	string blockToDecode; // string que contera o bloco a ser decodificado
+	//O vetor "indices" contem o indice "a" necessario para decodificacao. Cada posicao
+	//	corresponde ao indice de um bloco. Portanto, precisa-se iterar sobre esse vetor a cada bloco 
 	vector<int>::iterator indicesIT = indices.begin();
-	while(!inFile.eof()){
-		blockToDecode+=symbol;//concatenate the char to the block to encode
-		if(blockToDecode.size() == blockSize){//if it has reached the max block size
+	inFile>>symbol;//le um caracter
+	while(!inFile.eof()){ 
+		blockToDecode+=symbol;// concatena o simbolo lido de forma a ir montando um bloco
+		if(blockToDecode.size() == blockSize){//se atingiu o tamanho do bloco
 			decodedString= BWTransform::decodeBlock(blockToDecode,*indicesIT);//
 			indicesIT++;
 			// cout<<"\tBlock Encoded: "<<encodedString<<endl;
-			blockToDecode=""; //clear the block
+			blockToDecode=""; //limpa a variavel para construir o proximo bloco
 			outStream<<decodedString;
 		}
 		inFile>>symbol;
 	}
-	if(blockToDecode.size()>0){
+	//Na maneira como eh definida, o ultimo bloco pode ser de tamanho menor que os demais
+	//caso isso ocorra, o if de dentro do laco acima nao sera atingido para o ultimo bloco
+	//Entao, realizar  a decodificacao aqui
+	if(blockToDecode.size()>0){ 
 		decodedString= BWTransform::decodeBlock(blockToDecode,*indicesIT);//
 		indicesIT++;
 		// cout<<"\tBlock Encoded: "<<encodedString<<endl;
@@ -86,9 +91,9 @@ string BWTransform::decodeStream(std::istream &inFile,int blockSize,std::vector<
 }
 
 string BWTransform::decodeBlock(string block,int a){
-	// in this implementation, we are encoding bytes, then we have at most 256 symbls
-	//Fonte: material disponibilizado no tidia
-	int maxNumberOfSymbols = 256; 
+	
+	//Fonte: pseudo-codigo presente no material disponibilizado no tidia
+	int maxNumberOfSymbols = 256; //numero inicial que sera modificado depois
 	int blockSize;
 	int sum;
 	map<char,int> k;
@@ -99,11 +104,12 @@ string BWTransform::decodeBlock(string block,int a){
 	vector<char> Q;
 	map<char,int> checkingSymbolQnt;
 	blockSize=block.size();
-
+	//insere cada caracter em uma estrutura de map. Dessa maneira, simbolos iguais so serao inseridos uma unica vez
+	////desse modo, eh possivel contabilizar a quantidade de simbolos diferentes presentes no bloco
 	for(int i=0;i<blockSize;i++){
 		checkingSymbolQnt[block[i]]=0;
 	}
-
+	//seta a quantidade de simbolos com a contagem de characteres diferentes realizada acima
 	maxNumberOfSymbols=checkingSymbolQnt.size();
 	// for(int i=0;i<maxNumberOfSymbols;i++){
 	// 	k[i]=0;
@@ -145,25 +151,26 @@ string BWTransform::decodeBlock(string block,int a){
 string BWTransform::encodeBlock(string block,int *a){
 	string result;
 	int blockSize = block.length();
-	vector<int> orderedIndexes;
+	vector<int> orderedIndexes;//vetor que armazenara os indices da string ordenada
+	//inicializa o vetor
 	for(int i=0;i<blockSize;i++){
 		orderedIndexes.push_back(i);
 	}
-	// for(vector<int>::iterator it=orderedIndexes.begin();it!=orderedIndexes.end();it++){
-	// 	if(*it<0 || *it>116) cout<<*it<<" ";
-	// }
-	// cout <<endl;
+	
 	// cout<<"ENCODING BLOCK "<<block<<endl;
 	BWTCompare myComp = BWTCompare(block);
+	//ordena a string, armazenando os indices do inicio de cada umadas rotacoes no vetor orderedIndexes
 	sort(orderedIndexes.begin(),orderedIndexes.end(),myComp);
 	int localA;
 	int indexOfCode;
 	for(int i=0;i<blockSize;i++){
 		if(orderedIndexes[i]==0){
-			localA=i;
+			localA=i;//indica onde esta a string que representa o bloco iriginal
 		}
+		//os caracteres do bloco codificado sao os ultimos caracteres das strings ordenadas
+		//estes se encontram no indice imedeatametne anterior ao indice inicial
 		if(orderedIndexes[i]==0){
-			indexOfCode=block.size()-1;
+			indexOfCode=block.size()-1; 
 		}else{
 
 			indexOfCode=orderedIndexes[i]-1;
@@ -176,7 +183,7 @@ string BWTransform::encodeBlock(string block,int *a){
 
 }
 string BWTransform::encodeStream(std::istream &inFile,int blockSize,vector<int> &indices){
-	string blockToEncode;
+	string blockToEncode; //buffer sobre o qual vai send contruindo os blocos
 	char symbol;
 	inFile>>noskipws;
 	
@@ -199,6 +206,9 @@ string BWTransform::encodeStream(std::istream &inFile,int blockSize,vector<int> 
 		inFile>>symbol;
 
 	}
+	/*
+		Logica do if: vide decodeBlock
+	 */
 	if(blockToEncode.size()>0){//if the stream ended and the block was not complete
 		encodedString= BWTransform::encodeBlock(blockToEncode,&a);//
 		// cout<<"\tBlock Encoded: "<<encodedString<<endl;
