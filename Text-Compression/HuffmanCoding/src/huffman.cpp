@@ -173,6 +173,7 @@ std::string huffmanEncode(std::istream &inFile, std::map<char, long long> &char_
 	MyIOBitStream bitStream;
 
 	inFile.clear(); inFile.seekg(0, inFile.beg);
+	(*validBitsLastByte) = 8; 			// default : last byte has 8 bits
 	buffCnt = 0;
 	while (inFile.get(value)) {
 		codeVector = char_codeVector[value];
@@ -192,10 +193,10 @@ std::string huffmanEncode(std::istream &inFile, std::map<char, long long> &char_
 		}
 	}
 	if (buffCnt > 0) {
-		*validBitsLastByte = bitStream.getBitsWriteCounter();
-		cout << " Number of valid bits in the last byte: " << *validBitsLastByte <<endl;
+		(*validBitsLastByte) = bitStream.getBitsWriteCounter() ? : 8;
 		ssFileEncoded << bitStream.getString();
 	}
+	cout << " Number of valid bits in the last byte: " << *validBitsLastByte <<endl;
 	
 	return ssFileEncoded.str();
 }
