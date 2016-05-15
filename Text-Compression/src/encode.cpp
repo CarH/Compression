@@ -237,7 +237,7 @@ void mainEncodeHuffman(istream &inFile,ostream &outFile,HuffmanConfig &config){
 bool parseArgs(int argc,const char *argv[],bool *huffman,bool *bwt,bool *rl,int *blockSize,string &inFileName,string &outFileName){
 	
 	if(argc<9){
-		cerr<<"ERROR: Unexpected numberof argumets. Expected 8. Found: "<<argc-1<<endl;
+		cerr<<"ERROR: Unexpected number of argumets. Expected 8. Found: "<<argc-1<<endl;
 		return false;
 	}
 	*rl=false;

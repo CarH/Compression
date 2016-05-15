@@ -168,7 +168,7 @@ void mainDecodeHuffman(iostream &inFile,ostream &outFile,HuffmanConfig &config){
 
 bool parseArgs(int argc,const char *argv[],string &inFileName,string &outFileName){
 	if(argc<5){
-		cerr<<"ERROR: Unexpected numberof argumets. Expected 4. Found: "<<argc-1<<endl;
+		cerr<<"ERROR: Unexpected number of argumets. Expected 4. Found: "<<argc-1<<endl;
 		return false;
 	}
 	string argRead;
