@@ -18,6 +18,25 @@ clean:
 	rm -f -r ./bin
 	mkdir ./bin
 tests: 
-	rm outCoded.bin resultDecoded.txt
-	./bin/encode -i in.in -o outCoded.bin --txtblck=1024 --bwt=true --runl=true --huffman=true
-	./bin/decode -i outCoded.bin -o resultDecoded.txt
+	rm -f outCoded* resultDecoded*
+	./bin/encode -i in.in -o outCodedHuff.bin --txtblck=1024 --bwt=false --runl=false --huffman=true
+	./bin/encode -i in.in -o outCodedRL.bin --txtblck=1024 --bwt=false --runl=true --huffman=false
+	./bin/encode -i in.in -o outCodedBTW1024.bin --txtblck=1024 --bwt=true --runl=false --huffman=false
+	./bin/encode -i in.in -o outCodedHuffRL.bin --txtblck=1024 --bwt=false --runl=true --huffman=true
+	./bin/encode -i in.in -o outCodedHuffBTW1024.bin --txtblck=1024 --bwt=true --runl=false --huffman=true
+	./bin/encode -i in.in -o outCodedHuffRLBTW1024.bin --txtblck=1024 --bwt=true --runl=true --huffman=true
+	./bin/encode -i in.in -o outCodedRLBTW1024.bin --txtblck=1024 --bwt=true --runl=true --huffman=false
+	./bin/decode -i outCodedHuff.bin -o resultDecodedHuff.txt
+	./bin/decode -i outCodedRL.bin -o resultDecodedRL.txt
+	./bin/decode -i outCodedBTW1024.bin -o resultDecodedBTW1024.txt
+	./bin/decode -i outCodedHuffRL.bin -o resultDecodedHuffRL.txt
+	./bin/decode -i outCodedHuffBTW1024.bin -o resultDecodedHuffBTW1024.txt
+	./bin/decode -i outCodedHuffRLBTW1024.bin -o resultDecodedHuffRLBTW1024.txt
+	./bin/decode -i outCodedRLBTW1024.bin -o resultDecodedRLBTW1024.txt
+	diff resultDecodedHuff.txt in.in
+	diff resultDecodedRL.txt in.in
+	diff resultDecodedBTW1024.txt in.in
+	diff resultDecodedHuffRL.txt in.in
+	diff resultDecodedHuffBTW1024.txt in.in
+	diff resultDecodedHuffRLBTW1024.txt in.in
+	diff resultDecodedRLBTW1024.txt in.in

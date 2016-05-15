@@ -91,7 +91,7 @@ int main(int argc, char const *argv[])
 		cout<<"\tEncoding type detected: Run Length => Huffman"<<endl;
 		cout<<"\tDecoding Huffman"<<endl;
 		mainDecodeHuffman(inFile,intermediteStringStream,compConfig.huffConfig);
-		cout<<"intermediteStringStream: "<<intermediteStringStream.str()<<endl;
+		// cout<<"intermediteStringStream: "<<intermediteStringStream.str()<<endl;
 		cout<<"\tDecoding Run Length"<<endl;
 		mainDecodeRunLength(intermediteStringStream,outStrStream,compConfig.rlConfig,false);
 	}else if(compConfig.huffConfig.isValid 
