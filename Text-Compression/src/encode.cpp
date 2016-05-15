@@ -11,7 +11,7 @@
 #include "BWTransform.hpp"
 #include "CompressionConfig.hpp"
 
-
+#define DEBUG false
 #define BUFFER_SIZE 4096
 
 using namespace std;
@@ -33,6 +33,13 @@ void mainEncodeBWT(istream &inFile,ostream &outFile,BWTConfig &config);
  * @param binary  Indicates if the sequence length must be encoded as binary or as ASCII numbers
  */
 void mainEncodeRunLength(istream &inFile,ostream &outFile,RunLengthConfig &config,bool binary);
+/**
+ * Call the functions responsible to encode the input stream inFile characters using
+ * Huffman algorithm and put the result into the output stream outFile
+ * @param inFile  input stream that contains the characters sequence to be encoded
+ * @param outFile output stream that will be used to write the result of the encode
+ * @param config  structure that contains config variables of the Huffman algorithm.
+ */
 void mainEncodeHuffman(istream &inFile,ostream &outFile,HuffmanConfig &config);
 /**
  * ParseArgs verifies the arguments passed to this program. It is expected that all 8 params is specified, setting
@@ -208,23 +215,21 @@ void mainEncodeRunLength(istream &inFile,ostream &outFile,RunLengthConfig &confi
 		outFile<<encodedString;
 	}
 }
+
 void mainEncodeHuffman(istream &inFile,ostream &outFile,HuffmanConfig &config){	
 	string encodedString;
 
 	config.char_freq = calculateFrequency(inFile);
-
-	printMap(config.char_freq); // TODO DELETE
 	
-	buildHuffmanTree(config.char_freq);
+	if (DEBUG) printMap(config.char_freq);
 
+	buildHuffmanTree(config.char_freq);
 	createCodeTable(&huffmanTreeRoot);
 	
-	printCodeTable(); // TODO DELETE
+	if (DEBUG) printCodeTable();
 
 	encodedString = huffmanEncode(inFile, config.char_freq, &config.validBitsLastByte);
-	// cout << "encodedString Huffman: "<<encodedString<<endl;
 	outFile << encodedString;
-
 	freeDynamicMemory();
 }
 

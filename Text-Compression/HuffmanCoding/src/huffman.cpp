@@ -126,7 +126,7 @@ map<char, long long> calculateFrequency(std::istream &inFile) {
 void writeHuffmanHeader(std::ostream &outFile, std::map<char, long long> &char_freq, int validBitsLastByte) {
 	long long length = char_freq.size(); // The number of pairs char-frequency that will appear
 	
-	cout << " validBitsLastByte: " << validBitsLastByte  << ", length: " << length<<endl;
+	if (DEBUG) cout << " validBitsLastByte: " << validBitsLastByte  << ", length: " << length<<endl;
 	
 	outFile << "H ";					// H - Huffman Algorithm
 	outFile << validBitsLastByte;		// valid bits of the last byte
@@ -145,20 +145,20 @@ std::map<char, long long> readHuffmanHeader(std::istream &inFile, int *validBits
 	map<char, long long> char_freq;
 	inFile >> skipws;
 	inFile >> (*validBitsLastByte);
-	cout << " + validBitsLastByte: " << *validBitsLastByte <<endl;
+	if (DEBUG) cout << " + validBitsLastByte: " << *validBitsLastByte <<endl;
 	inFile >> length;
-	cout << " + length: " << length << endl;
+	if (DEBUG) cout << " + length: " << length << endl;
 
 	inFile.get(space);
-	cout << " - It was suppose to be a space: [" << space << "]\n";
+	if (DEBUG) cout << " - It was suppose to be a space: [" << space << "]\n";
 
 	for (int i = 0; i < length; i++) {
 		inFile.get(character);
 		inFile.get(space);
 		inFile >> frequency;
 		inFile.get(space2);
-		cout << "character: " << character << ", space: "<< space << ", frequency: "<< frequency << ", space2: " << space2 <<endl;
-		cout << "char_freq["<<character<<"] : " << frequency << endl;
+		if (DEBUG) cout << "character: " << character << ", space: "<< space << ", frequency: "<< frequency << ", space2: " << space2 <<endl;
+		if (DEBUG) cout << "char_freq["<<character<<"] : " << frequency << endl;
 		char_freq[character] = frequency;
 	}
 	return char_freq;
@@ -196,7 +196,7 @@ std::string huffmanEncode(std::istream &inFile, std::map<char, long long> &char_
 		(*validBitsLastByte) = bitStream.getBitsWriteCounter() ? : 8;
 		ssFileEncoded << bitStream.getString();
 	}
-	cout << " Number of valid bits in the last byte: " << *validBitsLastByte <<endl;
+	if (DEBUG) cout << " Number of valid bits in the last byte: " << *validBitsLastByte <<endl;
 	
 	return ssFileEncoded.str();
 }
@@ -212,7 +212,7 @@ void huffmanDecode(std::istream &inFile, std::ostream &outFile, int validBitsLas
 
 	// Get the initial offset of the inFile
 	iniOffset = inFile.tellg();
-	cout << " iniOffset: " << iniOffset<<endl;
+	if (DEBUG) cout << " iniOffset: " << iniOffset<<endl;
 
 	// Get the length of the inFile
 	inFile.seekg(0, inFile.end);
@@ -220,7 +220,7 @@ void huffmanDecode(std::istream &inFile, std::ostream &outFile, int validBitsLas
 	inFile.seekg(iniOffset, inFile.beg);
 	byteCounter = inLength - iniOffset;
 
-	cout << " byteCounter: "<<byteCounter<<endl;
+	if (DEBUG) cout << " byteCounter: "<<byteCounter<<endl;
 
 	Node *currNode = &huffmanTreeRoot;
 	while (!inFile.eof() && byteCounter--) {

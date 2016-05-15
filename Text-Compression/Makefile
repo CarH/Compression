@@ -19,5 +19,5 @@ clean:
 	mkdir ./bin
 tests: 
 	rm outCoded.bin resultDecoded.txt
-	./bin/encode -i in.in -o outCoded.bin --txtblck=1024 --bwt=false --runl=false --huffman=true
+	./bin/encode -i in.in -o outCoded.bin --txtblck=1024 --bwt=true --runl=true --huffman=true
 	./bin/decode -i outCoded.bin -o resultDecoded.txt

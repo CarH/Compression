@@ -20,7 +20,6 @@ RunLengthConfig::~RunLengthConfig(){
 
 HuffmanConfig::HuffmanConfig(){
 	this->isValid=false;
-	cerr<<"DEBUG: HuffManConfig To Be Implemented"<<endl;
 }
 HuffmanConfig::~HuffmanConfig(){
 
@@ -139,7 +138,6 @@ void CompressionConfig::writeHeaderHuffman(ostream &outFile){
 	writeHuffmanHeader(outFile, huffConfig.char_freq, huffConfig.validBitsLastByte);
 }
 void CompressionConfig::parseHeaderHuffman(istream &inFile){
-	cerr<<"DEBUG: CompressionConfig::parseHeaderHuffman To be Implemented"<<endl;
 	huffConfig.char_freq = readHuffmanHeader(inFile, &huffConfig.validBitsLastByte);
 	buildHuffmanTree(huffConfig.char_freq);
 }

@@ -133,29 +133,17 @@ int main(int argc, char const *argv[])
 		exit(EXIT_FAILURE);
 	}
 	inFile.close();
-	cout<<"Wiritng to File"<<endl;
+	cout<<"Writing to File"<<endl;
 	outFile<<outStrStream.str();
 	outFile.close();
-	// cout<<decodedString;
-
 	return 0;
 }
 
 void mainDecodeBWT(istream &inFile,ostream &outFile,BWTConfig &config){
-	
 	string decodedString;
-	
-
-	decodedString= BWTransform::decodeStream(inFile,config.blockSize,config.aVector);
-	
+	decodedString= BWTransform::decodeStream(inFile,config.blockSize,config.aVector);	
 	//Writing to File
-	
 	outFile<<decodedString;
-	
-	// cout<<"DEBUG: "<<decodedString<<endl;
-
-	// cout<<encodedString;
-
 }
 
 void mainDecodeRunLength(iostream &inFile,ostream &outFile,RunLengthConfig &config,bool binary){
