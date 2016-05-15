@@ -11,7 +11,7 @@
 
 	- GRUPO
 		ALUNO: Carlos Humberto S. Baqueta	NUSP.: 7987456
-		ALUNO: Eric Freire Antunes			NUSP.: 
+		ALUNO: Eric Freire Antunes			NUSP.: 7987115
 		
 	- Instruções (para Terminal de um sistema linux)
 	 	Para compilar: 
