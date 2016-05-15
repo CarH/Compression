@@ -5,12 +5,14 @@
 	________________________________________________________________________entrega:_15/05/2015_____________
 	
 	- ALGORITMOS IMPLEMENTADOS
-		Transformada de Burrows-Wheeler (BWT), Run Length e Huffman
+		. Transformada de Burrows-Wheeler (BWT) com otimização espacial (sugerida na bibliografia)
+		. Run Length
+		. Huffman
 
 	- GRUPO
-		ALUNO: CARLOS HUMBERTO S. BAQUETA	NUSP.: 7987456
+		ALUNO: Carlos Humberto S. Baqueta	NUSP.: 7987456
 		ALUNO: Eric Freire Antunes			NUSP.: 
-
+		
 	- Instruções (para Terminal de um sistema linux)
 	 	Para compilar: 
 	 		$ make
