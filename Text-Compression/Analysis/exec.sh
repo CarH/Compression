@@ -55,7 +55,7 @@ else
 	   1000) app_flags_final="$app_flags_final $app_flags_enable_bwt_1000"
 			outNameSuffix=$outNameSuffix"_bwt_1000"
 	   ;;
-	   10000) app_flags_final="$app_flags_final $app_flags_enable_bwt_1000"
+	   10000) app_flags_final="$app_flags_final $app_flags_enable_bwt_10000"
 			outNameSuffix=$outNameSuffix"_bwt_10000"
 	   ;;
 	esac
