@@ -1,9 +1,9 @@
  109051914 dna.100MB_bwt_100.out
  105277042 dna.100MB_bwt_1000.out
- 105277042 dna.100MB_bwt_10000.out
-  29325317 dna.100MB_bwt_10000_huff.out
-  36039754 dna.100MB_bwt_10000_huff_runl.out
- 108602669 dna.100MB_bwt_10000_runl.out
+ 104899554 dna.100MB_bwt_10000.out
+  28947829 dna.100MB_bwt_10000_huff.out
+  35745559 dna.100MB_bwt_10000_huff_runl.out
+ 107336265 dna.100MB_bwt_10000_runl.out
   29325317 dna.100MB_bwt_1000_huff.out
   36039754 dna.100MB_bwt_1000_huff_runl.out
  108602669 dna.100MB_bwt_1000_runl.out
@@ -19,10 +19,10 @@
  106204513 dna.100MB_runl.out
  218103818 dna.200MB_bwt_100.out
  210554074 dna.200MB_bwt_1000.out
- 210554074 dna.200MB_bwt_10000.out
-  58579960 dna.200MB_bwt_10000_huff.out
-  72049066 dna.200MB_bwt_10000_huff_runl.out
- 217185227 dna.200MB_bwt_10000_runl.out
+ 209799098 dna.200MB_bwt_10000.out
+  57824984 dna.200MB_bwt_10000_huff.out
+  71466066 dna.200MB_bwt_10000_huff_runl.out
+ 214667054 dna.200MB_bwt_10000_runl.out
   58579960 dna.200MB_bwt_1000_huff.out
   72049066 dna.200MB_bwt_1000_huff_runl.out
  217185227 dna.200MB_bwt_1000_runl.out
@@ -38,10 +38,10 @@
  214103717 dna.200MB_runl.out
   54525962 dna.50MB_bwt_100.out
   52638526 dna.50MB_bwt_1000.out
-  52638526 dna.50MB_bwt_10000.out
-  14693573 dna.50MB_bwt_10000_huff.out
-  18049306 dna.50MB_bwt_10000_huff_runl.out
-  54294447 dna.50MB_bwt_10000_runl.out
+  52449782 dna.50MB_bwt_10000.out
+  14504829 dna.50MB_bwt_10000_huff.out
+  17908769 dna.50MB_bwt_10000_huff_runl.out
+  53654031 dna.50MB_bwt_10000_runl.out
   14693573 dna.50MB_bwt_1000_huff.out
   18049306 dna.50MB_bwt_1000_huff_runl.out
   54294447 dna.50MB_bwt_1000_runl.out
@@ -55,5 +55,6 @@
   14483848 dna.50MB_huff.out
   18080073 dna.50MB_huff_runl.out
   53121984 dna.50MB_runl.out
-      3158 times.txt
-4559764484 total
+      2126 sizes.txt
+      3854 times.txt
+4551682165 total

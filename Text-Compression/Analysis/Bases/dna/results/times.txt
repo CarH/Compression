@@ -55,3 +55,15 @@
 ./Bases/dna/results/dna.50MB_bwt_500_huff_runl.out 	 1.68333
 ./Bases/dna/results/dna.50MB_bwt_1000_huff_runl.out 	 1.75
 ./Bases/dna/results/dna.50MB_bwt_10000_huff_runl.out 	 1.86667
+./Bases/dna/results/dna.100MB_bwt_10000.out 	 4.13333
+./Bases/dna/results/dna.100MB_bwt_10000_huff.out 	 5.46667
+./Bases/dna/results/dna.100MB_bwt_10000_runl.out 	 4.88333
+./Bases/dna/results/dna.100MB_bwt_10000_huff_runl.out 	 5.88333
+./Bases/dna/results/dna.200MB_bwt_10000.out 	 8.96667
+./Bases/dna/results/dna.200MB_bwt_10000_huff.out 	 11.0333
+./Bases/dna/results/dna.200MB_bwt_10000_runl.out 	 9.8
+./Bases/dna/results/dna.200MB_bwt_10000_huff_runl.out 	 12.0333
+./Bases/dna/results/dna.50MB_bwt_10000.out 	 2.23333
+./Bases/dna/results/dna.50MB_bwt_10000_huff.out 	 2.8
+./Bases/dna/results/dna.50MB_bwt_10000_runl.out 	 2.43333
+./Bases/dna/results/dna.50MB_bwt_10000_huff_runl.out 	 2.91667
