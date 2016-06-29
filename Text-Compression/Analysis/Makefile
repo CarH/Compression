@@ -19,6 +19,7 @@ RESULTSDIR_XML=$(BASESDIR_XML)results/
 
 ITERATE=./iterate.sh
 ITERATE_ONLY_10000=./iterate_only_10000.sh
+ITERATE_DECODE=./iterate_decode.sh
 
 all: 
 	echo ola
@@ -40,6 +41,14 @@ runDNAFix:
 	sh $(ITERATE_ONLY_10000) $(BASESDIR_DNA)
 	cd $(RESULTSDIR_DNA) ; \
 		wc -c * > sizes.txt
+runDecodeXML:
+	sh $(ITERATE_DECODE) $(BASESDIR_XML)
+
+runDecodeENG:
+	sh $(ITERATE_DECODE) $(BASESDIR_ENG)
+
+runDecodeDNA:
+	sh $(ITERATE_DECODE) $(BASESDIR_DNA)
 
 
 
